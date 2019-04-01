@@ -1,0 +1,7 @@
+@import "./variables.css";
+
+:global(.root) {
+	height: 100%;
+	background-color: var(--carbon);
+	color: var(--white);
+}

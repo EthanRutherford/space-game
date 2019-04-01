@@ -1,0 +1,103 @@
+@import "./variables.css";
+
+.menu {
+	margin: auto;
+	width: var(--standard-width);
+	min-width: var(--standard-min-width);
+}
+
+.title {
+	font-size: var(--huge);
+	padding: 20px 0;
+}
+
+.columns {
+	display: flex;
+	width: 300px;
+}
+
+.column {
+	flex: 1 0 0;
+}
+.column:not(:last-child) {
+	margin-right: 20px;
+}
+
+.button {
+	display: block;
+	border-radius: 4px;
+	margin-bottom: 10px;
+	padding: 10px;
+	height: 50px;
+	width: 100%;
+	text-align: center;
+}
+.hover:not(:disabled) {
+	background: linear-gradient(
+		90deg,
+		var(--clear) 50%,
+		var(--lightning-blue) 98%,
+		var(--clear)
+	);
+	background-size: 300% 100%;
+	animation: shimmer 2s linear infinite;
+}
+.active:not(:disabled) {
+	background: radial-gradient(
+		circle closest-side at center,
+		var(--clear) 50%,
+		var(--lightning-blue) 90%,
+		var(--clear)
+	);
+	background-repeat: no-repeat;
+	animation: blowout 1.2s linear 1;
+	animation-fill-mode: forwards;
+}
+.button:disabled {
+	filter: brightness(.5);
+}
+
+.input {
+	display: block;
+	border-radius: 4px;
+	padding: 10px;
+	height: 50px;
+	width: 100%;
+	background: transparent;
+	text-align: center;
+}
+.input:hover:not(:disabled) {
+	background: linear-gradient(
+		90deg,
+		var(--clear) 50%,
+		var(--lightning-blue) 98%,
+		var(--clear)
+	);
+	background-size: 300% 100%;
+	animation: shimmer 2s linear infinite;
+}
+
+@keyframes shimmer {
+	from {
+		background-position: 150% 50%;
+	}
+	to {
+		background-position: 0% 50%;
+	}
+}
+@keyframes blowout {
+	from {
+		background-size: 1% 1%;
+		background-position: 50%, 50%;
+	}
+	to {
+		background-size: 1000% 1000%;
+		background-position: 50%, 50%;
+	}
+}
+
+@media (max-width: 400px) {
+	.columns {
+		width: 100%;
+	}
+}

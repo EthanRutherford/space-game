@@ -1,0 +1,30 @@
+:root {
+	/* font-sizes */
+	--tiny: 10px;
+	--small: 15px;
+	--normal: 20px;
+	--large: 25px;
+	--huge: 30px;
+
+	/* sizes */
+	--header-size: 40px;
+	--standard-width: 60vw;
+	--standard-min-width: calc(100vmin - 40px);
+
+	/* greys */
+	--white: hsl(0, 0%, 100%);
+	--not-white: hsl(0, 0%, 90%);
+	--ash-light: hsl(0, 0%, 80%);
+	--ash: hsl(0, 0%, 70%);
+	--ash-dark: hsl(0, 0%, 60%);
+	--grey: hsl(0, 0%, 50%);
+	--slate-light: hsl(0, 0%, 40%);
+	--slate: hsl(0, 0%, 30%);
+	--slate-dark: hsl(0, 0%, 20%);
+	--carbon: hsl(0, 0%, 10%);
+	--black: hsl(0, 0%, 0%);
+
+	/* bluegreen */
+	--lightning-blue: hsla(165, 100%, 65%, 1);
+	--clear: hsla(165, 100%, 65%, 0);
+}

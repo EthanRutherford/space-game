@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css?family=Share+Tech+Mono');
+@import "./variables.css";
+
+html, body, div, span, p, a, img,
+h1, h2, h3, h4, h5, h6,
+b, u, i, center, ol, ul, li,
+label, button, input, select, textarea,
+canvas, footer, header {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	vertical-align: baseline;
+	color: inherit;
+	font: inherit;
+}
+html {
+	font: var(--normal)/1.2 'Share Tech Mono', monospace;
+}
+:focus {
+	outline: 0;
+}
+button {
+	background: none;
+	cursor: pointer;
+}
+
+html, body {
+	height: 100%;
+}
