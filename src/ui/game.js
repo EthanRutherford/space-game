@@ -2,47 +2,44 @@ const {useRef, useEffect} = require("react");
 const j = require("react-jenny");
 const {Math: {Vector2D}} = require("boxjs");
 const {Timing, ActionAck} = require("../../shared/serial");
-const MessageChannel = require("../logic/message-channel");
 const Game = require("../logic/game");
 
 module.exports = function GameUi(props) {
 	const canvas = useRef();
-	const data = useRef({});
+	const game = useRef({});
 	useEffect(function() {
 		// create game
-		data.current.game = new Game(canvas.current);
+		game.current = new Game(canvas.current);
 
 		// listen for updates
-		data.current.channel = new MessageChannel(`ws://${props.ip}:12345`);
-		data.current.channel.onMessage = (message) => {
+		props.channel.addListener((message) => {
 			if (message.type === Timing) {
-				data.current.game.updateGameTime(message.data.time);
+				game.current.updateGameTime(message.data.time);
 			} else if (message.type === ActionAck) {
-				data.current.game.ackAction(message.data);
+				game.current.ackAction(message.data);
 			} else {
-				data.current.game.updateSync(message.data);
+				game.current.updateSync(message.data);
 			}
-		};
+		});
 	}, []);
 
 	function mouseDown(event) {
-		const {game, channel} = data.current;
 		if (event.button !== 0) {
 			return;
 		}
 
-		const origin = game.renderer.viewportToWorld(
+		const origin = game.current.renderer.viewportToWorld(
 			event.clientX,
 			event.clientY,
-			game.camera,
+			game.current.camera,
 		);
 		let v = new Vector2D(0, 0);
 
 		const mouseMove = (innerEvent) => {
-			v = Vector2D.clone(game.renderer.viewportToWorld(
+			v = Vector2D.clone(game.current.renderer.viewportToWorld(
 				innerEvent.clientX,
 				innerEvent.clientY,
-				game.camera,
+				game.current.camera,
 			)).sub(origin);
 
 			const length = v.length;
@@ -61,8 +58,8 @@ module.exports = function GameUi(props) {
 				dx: v.x * 5, dy: v.y * 5,
 			};
 
-			if (game.tryAddAction(action)) {
-				channel.send(game.frameId, action);
+			if (game.current.tryAddAction(action)) {
+				props.channel.sendAction(game.current.frameId, action);
 			}
 
 			window.removeEventListener("mousemove", mouseMove);
@@ -74,9 +71,8 @@ module.exports = function GameUi(props) {
 	}
 
 	function wheel(event) {
-		data.current.game.camera.zoom = Math.max(
-			data.current.game.camera.zoom + event.deltaY / 100,
-			1,
+		game.current.camera.zoom = Math.max(
+			game.current.camera.zoom + event.deltaY / 100, 1,
 		);
 	}
 

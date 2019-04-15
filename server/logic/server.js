@@ -1,9 +1,26 @@
 const {performance} = require("perf_hooks");
 const WebSocket = require("ws");
-const {Sync, Timing, Action, ActionAck, bytify, parse} = require("../../shared/serial");
+const {
+	Config,
+	Sync,
+	Timing,
+	Action,
+	ActionAck,
+	bytify,
+	parse,
+} = require("../../shared/serial");
 const Game = require("./game");
 
+// eslint-disable-next-line no-console
 const handleError = (error) => error && console.error(error);
+
+function broadCast(wss, type, ...args) {
+	const message = bytify(type, ...args);
+
+	for (const ws of wss.clients) {
+		ws.send(message, handleError);
+	}
+}
 
 function synchronize(ws, frameZero) {
 	// calculate round trip time for this connection
@@ -50,33 +67,106 @@ function synchronize(ws, frameZero) {
 	setTimeout(ping, 20);
 }
 
-module.exports = function createServer(server = null) {
+function initGameClient(game, ws) {
+	// start clock synchronization loop
+	synchronize(ws, game.frameZero);
+
+	// add handler for game messages
+	ws.handleGameMessage = function(message) {
+		if (message.type === Action) {
+			if (game.tryAddAction(message.data)) {
+				ws.send(bytify(ActionAck, message.data), handleError);
+			}
+		}
+	};
+}
+
+function initGame(wss) {
 	const game = new Game();
+
+	for (const ws of wss.clients) {
+		initGameClient(game, ws);
+	}
+
+	game.postSolve = (frameId) => {
+		broadCast(wss, Sync, frameId, [...game.getBodies()]);
+	};
+
+	return game;
+}
+
+module.exports = function createServer(server = null) {
+	let game = null;
+	const idStack = new Array(256).fill(0).map((_, i) => i).reverse();
 	const wss = new WebSocket.Server({server, port: 12345});
 
 	wss.on("connection", (ws) => {
+		// we can only allow so many clients
+		if (idStack.length === 0) {
+			ws.close();
+		}
+
+		// assign a free id
+		ws.userId = idStack.pop();
+
 		// set binary type for using Serial
 		ws.binaryType = "arraybuffer";
-
-		// start clock synchronization loop
-		synchronize(ws, game.frameZero);
 
 		// listen for messages
 		ws.on("message", (bytes) => {
 			const message = parse(bytes);
-			if (message.type === Action) {
-				if (game.tryAddAction(message.data)) {
-					ws.send(bytify(ActionAck, message.data), handleError);
+			if (message.type === Config) {
+				if (message.data.type === Config.start) {
+					if (game === null) {
+						game = initGame(wss);
+					} else {
+						initGameClient(game, ws);
+					}
+				} else if (message.data.type === Config.name) {
+					ws.name = message.data.name;
+					broadCast(wss, Config, message.data);
+				} else if (message.data.type === Config.role) {
+					ws.role = message.data.role;
+					broadCast(wss, Config, message.data);
 				}
 			}
+
+			if (ws.handleGameMessage != null) {
+				ws.handleGameMessage(message);
+			}
 		});
-	});
 
-	game.postSolve = (frameId) => {
-		const message = bytify(Sync, frameId, [...game.getBodies()]);
+		// clean up on close
+		ws.on("close", () => {
+			// return the id to the stack
+			idStack.push(ws.userId);
 
-		for (const ws of wss.clients) {
-			ws.send(message, handleError);
+			// let other users know about the dced user
+			broadCast(wss, Config, {
+				type: Config.userDced,
+				userId: ws.userId,
+			});
+		});
+
+		// let other users know about this user
+		const newClientMessage = bytify(Config, {
+			type: Config.newUser,
+			user: ws,
+		});
+
+		const users = [];
+		for (const client of wss.clients) {
+			if (client !== ws) {
+				users.push(client);
+				client.send(newClientMessage, handleError);
+			}
 		}
-	};
+
+		// let the user know their id, and the current user list
+		ws.send(bytify(Config, {
+			type: Config.init,
+			userId: ws.userId,
+			users,
+		}), handleError);
+	});
 };

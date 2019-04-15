@@ -1,9 +1,10 @@
 const {Uint8} = require("./primitives");
+const Config = require("./config");
 const Sync = require("./sync");
 const Timing = require("./timing");
 const Action = require("./action");
 const ActionAck = require("./action-ack");
-const KIND_MAP = [Sync, Timing, Action, ActionAck];
+const KIND_MAP = [Config, Sync, Timing, Action, ActionAck];
 KIND_MAP.forEach((kind, index) => kind.ID = index);
 
 // Big ol buffer (approximately 1MB) for messages.
@@ -46,6 +47,7 @@ function parse(buffer) {
 }
 
 module.exports = {
+	Config,
 	Sync,
 	Timing,
 	Action,

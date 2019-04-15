@@ -13,7 +13,7 @@
 
 .columns {
 	display: flex;
-	width: 300px;
+	width: 800px;
 }
 
 .column {
@@ -23,13 +23,13 @@
 	margin-right: 20px;
 }
 
-.button {
+.input {
 	display: block;
 	border-radius: 4px;
-	margin-bottom: 10px;
 	padding: 10px;
 	height: 50px;
 	width: 100%;
+	background: transparent;
 	text-align: center;
 }
 .hover:not(:disabled) {
@@ -53,29 +53,10 @@
 	animation: blowout 1.2s linear 1;
 	animation-fill-mode: forwards;
 }
-.button:disabled {
+.input:disabled {
 	filter: brightness(.5);
 }
 
-.input {
-	display: block;
-	border-radius: 4px;
-	padding: 10px;
-	height: 50px;
-	width: 100%;
-	background: transparent;
-	text-align: center;
-}
-.input:hover:not(:disabled) {
-	background: linear-gradient(
-		90deg,
-		var(--clear) 50%,
-		var(--lightning-blue) 98%,
-		var(--clear)
-	);
-	background-size: 300% 100%;
-	animation: shimmer 2s linear infinite;
-}
 
 @keyframes shimmer {
 	from {

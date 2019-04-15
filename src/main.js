@@ -1,6 +1,8 @@
 const {render} = require("react-dom");
-const {useState} = require("react");
+const {useState, useMemo} = require("react");
 const j = require("react-jenny");
+const {Config} = require("../shared/serial");
+const UserManager = require("./logic/user-manager");
 const Menu = require("./ui/menu");
 const Game = require("./ui/game");
 require("./styles/reset");
@@ -8,19 +10,22 @@ require("./styles/root");
 
 function App() {
 	const [page, setPage] = useState("menu");
-	const [ip, setIp] = useState();
+	const userManager = useMemo(() => new UserManager(), []);
 
-	function startGame(address) {
+	function startGame() {
 		setPage("game");
-		setIp(address || "localhost");
+		userManager.channel.sendConfig({
+			type: Config.start,
+			userId: userManager.userId,
+		});
 	}
 
 	if (page === "menu") {
-		return j([Menu, {startGame}]);
+		return j([Menu, {startGame, userManager}]);
 	}
 
 	if (page === "game") {
-		return j([Game, {ip}]);
+		return j([Game, {channel: userManager.channel}]);
 	}
 
 	return Error("bad");
