@@ -17,51 +17,69 @@ const User = {
 	},
 };
 
+const Init = {
+	bytify: (state, config) => {
+		Uint8.bytify(state, config.userId);
+		TypedArray.bytify(state, User, config.users);
+	},
+	parse: (state, config) => {
+		config.userId = Uint8.parse(state);
+		config.users = TypedArray.parse(state, User);
+	},
+};
+
+const Name = {
+	bytify: (state, config) => {
+		Uint8.bytify(state, config.userId);
+		Text.bytify(state, config.name);
+	},
+	parse: (state, config) => {
+		config.userId = Uint8.parse(state);
+		config.name = Text.parse(state);
+	},
+};
+
+const Role = {
+	bytify: (state, config) => {
+		Uint8.bytify(state, config.userId);
+		Uint8.bytify(state, config.role);
+	},
+	parse: (state, config) => {
+		config.userId = Uint8.parse(state);
+		config.role = Uint8.parse(state);
+	},
+};
+
+const UserDced = {
+	bytify: (state, config) => {
+		Uint8.bytify(state, config.userId);
+	},
+	parse: (state, config) => {
+		config.userId = Uint8.parse(state);
+	},
+};
+
+const Start = {bytify: () => {}, parse: () => {}};
+
+const CONFIG_MAP = [Init, Name, Role, User, UserDced, Start];
+CONFIG_MAP.forEach((kind, index) => kind.ID = index);
+
 const Config = {
 	bytify: (state, config) => {
 		Uint8.bytify(state, config.type);
-
-		if (config.type === Config.init) {
-			Uint8.bytify(state, config.userId);
-			TypedArray.bytify(state, User, config.users);
-		} else if (config.type === Config.name) {
-			Uint8.bytify(state, config.userId);
-			Text.bytify(state, config.name);
-		} else if (config.type === Config.role) {
-			Uint8.bytify(state, config.userId);
-			Uint8.bytify(state, config.role);
-		} else if (config.type === Config.newUser) {
-			User.bytify(state, config.user);
-		} else if (config.type === Config.userDced) {
-			Uint8.bytify(state, config.userId);
-		}
+		CONFIG_MAP[config.type].bytify(state, config);
 	},
 	parse: (state) => {
 		const config = {type: Uint8.parse(state)};
-
-		if (config.type === Config.init) {
-			config.userId = Uint8.parse(state);
-			config.users = TypedArray.parse(state, User);
-		} else if (config.type === Config.name) {
-			config.userId = Uint8.parse(state);
-			config.name = Text.parse(state);
-		} else if (config.type === Config.role) {
-			config.userId = Uint8.parse(state);
-			config.role = Uint8.parse(state);
-		} else if (config.type === Config.newUser) {
-			config.user = User.parse(state);
-		} else if (config.type === Config.userDced) {
-			config.userId = Uint8.parse(state);
-		}
-
+		CONFIG_MAP[config.type].parse(state, config);
 		return config;
 	},
-	init: 0,
-	start: 1,
-	name: 2,
-	role: 3,
-	newUser: 4,
-	userDced: 5,
+	init: Init.ID,
+	name: Name.ID,
+	role: Role.ID,
+	newUser: User.ID,
+	userDced: UserDced.ID,
+	start: Start.ID,
 };
 
 module.exports = Config;
