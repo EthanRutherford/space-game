@@ -1,24 +1,37 @@
-const {Uint32, Float} = require("./primitives");
+const {Uint8, Uint32, Float} = require("./primitives");
 
-// TODO: this isn't a real action, it's for testing
+const Debug = {
+	bytify: (state, action) => {
+		Uint32.bytify(state, action.frameId);
+		Float.bytify(state, action.x);
+		Float.bytify(state, action.y);
+		Float.bytify(state, action.dx);
+		Float.bytify(state, action.dy);
+	},
+	parse: (state, action) => {
+		action.frameId = Uint32.parse(state);
+		action.x = Float.parse(state);
+		action.y = Float.parse(state);
+		action.dx = Float.parse(state);
+		action.dy = Float.parse(state);
+	},
+};
+
+const ACTION_MAP = [];
+ACTION_MAP[255] = Debug;
+ACTION_MAP.forEach((kind, index) => kind.ID = index);
 
 const Action = {
-	bytify: (state, frameId, value) => {
-		Uint32.bytify(state, frameId);
-		Float.bytify(state, value.x);
-		Float.bytify(state, value.y);
-		Float.bytify(state, value.dx);
-		Float.bytify(state, value.dy);
+	bytify: (state, action) => {
+		Uint8.bytify(state, action.type);
+		ACTION_MAP[action.type].bytify(state, action);
 	},
 	parse: (state) => {
-		return {
-			frameId: Uint32.parse(state),
-			x: Float.parse(state),
-			y: Float.parse(state),
-			dx: Float.parse(state),
-			dy: Float.parse(state),
-		};
+		const action = {type: Uint8.parse(state)};
+		ACTION_MAP[action.type].parse(state, action);
+		return action;
 	},
+	debug: Debug.ID,
 };
 
 module.exports = Action;

@@ -1,7 +1,7 @@
 const {useRef, useEffect} = require("react");
 const j = require("react-jenny");
 const {Math: {Vector2D}} = require("boxjs");
-const {Timing, ActionAck} = require("../../shared/serial");
+const {Timing, Action, ActionAck} = require("../../shared/serial");
 const Game = require("../logic/game");
 
 module.exports = function GameUi(props) {
@@ -54,12 +54,14 @@ module.exports = function GameUi(props) {
 			}
 
 			const action = {
+				type: Action.debug,
+				frameId: game.current.frameId,
 				x: origin.x, y: origin.y,
 				dx: v.x * 5, dy: v.y * 5,
 			};
 
 			if (game.current.tryAddAction(action)) {
-				props.channel.sendAction(game.current.frameId, action);
+				props.channel.sendAction(action);
 			}
 
 			window.removeEventListener("mousemove", mouseMove);

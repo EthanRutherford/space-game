@@ -75,7 +75,9 @@ function initGameClient(game, ws) {
 	ws.handleGameMessage = function(message) {
 		if (message.type === Action) {
 			if (game.tryAddAction(message.data)) {
-				ws.send(bytify(ActionAck, message.data), handleError);
+				if (message.data.type === Action.debug) {
+					ws.send(bytify(ActionAck, message.data), handleError);
+				}
 			}
 		}
 	};

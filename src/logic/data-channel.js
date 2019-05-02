@@ -29,8 +29,8 @@ class DataChannel {
 
 		tryConnect();
 	}
-	sendAction(frameId, action) {
-		this.websocket.send(bytify(Action, frameId, action));
+	sendAction(action) {
+		this.websocket.send(bytify(Action, action));
 	}
 	sendConfig(config) {
 		this.websocket.send(bytify(Config, config));

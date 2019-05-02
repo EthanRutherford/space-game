@@ -1,7 +1,5 @@
 const {Uint32} = require("./primitives");
 
-// TODO: will need to be modified to work with real actions
-
 const ActionAck = {
 	bytify: (state, action) => {
 		Uint32.bytify(state, action.frameId);
