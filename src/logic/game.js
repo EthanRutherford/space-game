@@ -60,7 +60,7 @@ module.exports = class Game {
 		// The first kind is error offset smoothing. When a body drifts
 		// from the server position, the physics state is snapped to the
 		// correct value, but the error offset is stored. We use that
-		// error offset to adjust the rendered position, and gradually
+		// error offset to adjust the rendered position, and quickly
 		// drive that error offset back down to zero over time, so that
 		// the error is visually corrected smoothly.
 		// the second kind smooths over the differences in physics fps
@@ -187,7 +187,10 @@ module.exports = class Game {
 		}
 
 		// prepare to replay time
-		let frameId = this.latestSync ? this.latestSync.frameId : this.frameId;
+		let frameId = this.latestSync &&
+			this.frameId - this.latestSync.frameId >= this.frameBuffer.length ?
+			this.latestSync.frameId :
+			this.frameId;
 		const solver = this.frameBuffer[this.frameId - frameId];
 
 		// step forward and apply sync

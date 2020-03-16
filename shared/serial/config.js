@@ -17,6 +17,15 @@ const User = {
 	},
 };
 
+const NewUser = {
+	bytify: (state, config) => {
+		User.bytify(state, config.user);
+	},
+	parse: (state, config) => {
+		config.user = User.parse(state);
+	},
+};
+
 const Init = {
 	bytify: (state, config) => {
 		Uint8.bytify(state, config.userId);
@@ -61,7 +70,7 @@ const UserDced = {
 
 const Start = {bytify: () => {}, parse: () => {}};
 
-const CONFIG_MAP = [Init, Name, Role, User, UserDced, Start];
+const CONFIG_MAP = [Init, Name, Role, NewUser, UserDced, Start];
 CONFIG_MAP.forEach((kind, index) => kind.ID = index);
 
 const Config = {
@@ -77,7 +86,7 @@ const Config = {
 	init: Init.ID,
 	name: Name.ID,
 	role: Role.ID,
-	newUser: User.ID,
+	newUser: NewUser.ID,
 	userDced: UserDced.ID,
 	start: Start.ID,
 };
