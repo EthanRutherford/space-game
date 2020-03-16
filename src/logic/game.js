@@ -105,10 +105,10 @@ module.exports = class Game {
 		for (const update of this.latestSync.updates) {
 			if (this.idMap[update.id] == null) {
 				const body = new Body({
-					position: new Vector2D(update.x, update.y),
-					angle: update.r,
-					velocity: new Vector2D(update.dx, update.dy),
-					angularVelocity: update.dr,
+					position: update.position,
+					angle: update.radians,
+					velocity: update.velocity,
+					angularVelocity: update.angularVelocity,
 					shapes: [new Polygon().setAsBox(.5, .5)],
 				});
 
@@ -135,9 +135,9 @@ module.exports = class Game {
 				const errors = this.errorMap[id];
 
 				if (
-					Math.abs(update.x - body.position.x) < .0001 &&
-					Math.abs(update.y - body.position.y) < .0001 &&
-					Math.abs(update.r - body.transform.radians) < .0001
+					Math.abs(update.position.x - body.position.x) < .0001 &&
+					Math.abs(update.position.y - body.position.y) < .0001 &&
+					Math.abs(update.radians - body.transform.radians) < .0001
 				) {
 					continue;
 				}
@@ -146,17 +146,15 @@ module.exports = class Game {
 				const curX = body.position.x - errors.x;
 				const curY = body.position.y - errors.y;
 				const curR = body.transform.radians - errors.r;
-				errors.x = update.x - curX;
-				errors.y = update.y - curY;
-				errors.r = cleanAngle(update.r - curR);
+				errors.x = update.position.x - curX;
+				errors.y = update.position.y - curY;
+				errors.r = cleanAngle(update.radians - curR);
 
 				// snap physics state to synced position
-				body.position.x = update.x;
-				body.position.y = update.y;
-				body.transform.radians = update.r;
-				body.velocity.x = update.dx;
-				body.velocity.y = update.dy;
-				body.angularVelocity = update.dr;
+				body.position.set(update.position);
+				body.transform.radians = update.radians;
+				body.velocity.set(update.velocity);
+				body.angularVelocity = update.angularVelocity;
 
 				// wake body
 				body.setAsleep(false);

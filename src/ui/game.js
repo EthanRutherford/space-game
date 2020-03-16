@@ -1,7 +1,7 @@
 const {useRef, useEffect} = require("react");
 const j = require("react-jenny");
 const {Math: {Vector2D}} = require("boxjs");
-const {Timing, Action, ActionAck} = require("../../shared/serial");
+const {Timing, Action, ActionAck, Sync} = require("../../shared/serial");
 const Game = require("../logic/game");
 
 module.exports = function GameUi(props) {
@@ -17,7 +17,7 @@ module.exports = function GameUi(props) {
 				game.current.updateGameTime(message.data.time);
 			} else if (message.type === ActionAck) {
 				game.current.ackAction(message.data);
-			} else {
+			} else if (message.type === Sync) {
 				game.current.updateSync(message.data);
 			}
 		});
