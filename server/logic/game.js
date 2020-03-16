@@ -2,6 +2,7 @@ const {performance} = require("perf_hooks");
 const {fork, Solver} = require("boxjs");
 const {physTime, physTimeMs} = require("../../shared/game/constants");
 const {createBox} = require("../../shared/game/actions");
+const Ship = require("../../shared/game/ship");
 
 module.exports = class Game {
 	constructor() {
@@ -19,6 +20,11 @@ module.exports = class Game {
 		this.stepLoop();
 
 		this.nextKey = 0;
+
+		// game data
+		const shipBody = createBox({x: 0, y: 0, dx: 0, dy: 0});
+		this.frameBuffer[0].addBody(shipBody);
+		this.ship = new Ship(shipBody.id);
 	}
 	stepLoop() {
 		// compensate for drift by scheduling using when

@@ -92,7 +92,7 @@ function initGame(wss) {
 	}
 
 	game.postSolve = (frameId) => {
-		broadCast(wss, Sync, frameId, [...game.getBodies()]);
+		broadCast(wss, Sync, frameId, game.ship, [...game.getBodies()]);
 	};
 
 	return game;

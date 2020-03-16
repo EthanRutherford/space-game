@@ -10,7 +10,7 @@ const {
 } = require("2d-gl");
 const {
 	fork,
-	Math: {Vector2D, cleanAngle},
+	Math: {cleanAngle},
 	Solver,
 	Body,
 	AABB,
@@ -92,6 +92,13 @@ module.exports = class Game {
 			}
 		}
 
+		if (this.ship) {
+			const shipId = this.idMap[this.ship.bodyId];
+			const renderable = this.renderables[shipId];
+			this.camera.x += (renderable.x - this.camera.x) * .99;
+			this.camera.y += (renderable.y - this.camera.y) * .99;
+		}
+
 		this.renderer.render(this.camera, this.scene);
 	}
 	tryApplyUpdate(frameId, solver) {
@@ -102,6 +109,7 @@ module.exports = class Game {
 			return;
 		}
 
+		this.ship = this.latestSync.ship;
 		for (const update of this.latestSync.updates) {
 			if (this.idMap[update.id] == null) {
 				const body = new Body({
