@@ -1,6 +1,6 @@
 const {useState} = require("react");
 const j = require("react-jenny");
-const {Config} = require("../../shared/serial");
+const {roleNames} = require("../../shared/game/roles");
 const AnimatedInput = require("./animated-input");
 const styles = require("../styles/menu");
 
@@ -27,33 +27,28 @@ module.exports = function Menu({startGame, userManager}) {
 					value: name,
 					onChange: (event) => {
 						setName(event.target.value);
-						userManager.channel.sendConfig({
-							type: Config.name,
-							userId: userManager.userId,
-							name: event.target.value,
-						});
+						userManager.setName(event.target.value);
 					},
 				}]),
 			]),
-			j({div: styles.column}, [
+			j({div: styles.column}, roleNames.map((role, id) =>
 				j([AnimatedInput, {
 					className: styles.input,
 					hoverClass: styles.hover,
 					activeClass: styles.active,
-				}], "pilot"),
-				j([AnimatedInput, {
-					className: styles.input,
-					hoverClass: styles.hover,
-					activeClass: styles.active,
-				}], "gunner"),
-			]),
+					onClick: () => userManager.setRole(id),
+				}], role),
+			)),
 			j({div: styles.column}, [
-				// assignments go here
-			]),
-			j({div: styles.column}, [
-				j({div: 0}, (userManager.name || "") + " (you)"),
+				j({div: styles.row}, [
+					userManager.name + " (you)",
+					" - " + roleNames[userManager.role],
+				]),
 				...users.map(
-					(user) => j({div: 0}, user.name || "(unnamed)"),
+					(user) => j({div: styles.row}, [
+						user.name || "(unnamed)",
+						" - " + roleNames[user.role],
+					]),
 				),
 			]),
 		]),

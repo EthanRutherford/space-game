@@ -1,5 +1,6 @@
 const {performance} = require("perf_hooks");
 const WebSocket = require("ws");
+const {roleIds} = require("../../shared/game/roles");
 const {
 	Config,
 	Sync,
@@ -110,6 +111,8 @@ module.exports = function createServer(server = null) {
 
 		// assign a free id
 		ws.userId = idStack.pop();
+		ws.name = "";
+		ws.role = 0;
 
 		// set binary type for using Serial
 		ws.binaryType = "arraybuffer";
@@ -128,6 +131,15 @@ module.exports = function createServer(server = null) {
 					ws.name = message.data.name;
 					broadCast(wss, Config, message.data);
 				} else if (message.data.type === Config.role) {
+					// only one player per (meaningful) role
+					if (message.data.role !== roleIds.observer) {
+						for (const client of wss.clients) {
+							if (client.role === message.data.role) {
+								return;
+							}
+						}
+					}
+
 					ws.role = message.data.role;
 					broadCast(wss, Config, message.data);
 				}

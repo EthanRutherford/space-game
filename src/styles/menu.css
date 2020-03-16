@@ -13,14 +13,14 @@
 
 .columns {
 	display: flex;
-	width: 800px;
 }
 
-.column {
-	flex: 1 0 0;
-}
 .column:not(:last-child) {
+	flex: 0 0 200px;
 	margin-right: 20px;
+}
+.column:last-child {
+	flex: 1 0 0;
 }
 
 .input {
@@ -55,6 +55,11 @@
 }
 .input:disabled {
 	filter: brightness(.5);
+}
+
+.row {
+	height: 50px;
+	line-height: 50px;
 }
 
 

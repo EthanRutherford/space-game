@@ -6,8 +6,8 @@ module.exports = class UserManager {
 	constructor() {
 		this.channel = new DataChannel();
 		this.userId = null;
-		this.name = null;
-		this.role = null;
+		this.name = "";
+		this.role = 0;
 
 		this.otherClients = {};
 		this.updaters = new Set();
@@ -57,6 +57,20 @@ module.exports = class UserManager {
 					}
 				}
 			}
+		});
+	}
+	setName(name) {
+		this.channel.sendConfig({
+			type: Config.name,
+			userId: this.userId,
+			name,
+		});
+	}
+	setRole(role) {
+		this.channel.sendConfig({
+			type: Config.role,
+			userId: this.userId,
+			role,
 		});
 	}
 	use() {
