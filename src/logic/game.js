@@ -17,12 +17,18 @@ const {
 	Shapes: {Polygon},
 } = require("boxjs");
 const {physTime, physTimeMs} = require("../../shared/game/constants");
+const {GameState} = require("../../shared/game/game-state");
 const {createBox} = require("../../shared/game/actions");
+const Ship = require("../../shared/game/ship");
 const {vLerp, aLerp} = require("../logic/util");
 
 module.exports = class Game {
 	constructor(canvas) {
-		this.frameBuffer = [new Solver(), null, null, null];
+		const solver = new Solver();
+		const ship = new Ship(null);
+
+		const frame0 = new GameState(solver, ship);
+		this.frameBuffer = [frame0, null, null, null, null];
 		this.actionBuffer = [null, null, null, null, null];
 
 		// create renderer and related data
@@ -48,7 +54,7 @@ module.exports = class Game {
 	getVisibleFunc({x0, y0, x1, y1}) {
 		const visible = new Set();
 
-		this.getSolver().query(new AABB(x0, y0, x1, y1), (shape) => {
+		this.getGameState().solver.query(new AABB(x0, y0, x1, y1), (shape) => {
 			const renderable = this.renderables[shape.body.id];
 			visible.add(renderable);
 		});
@@ -70,7 +76,8 @@ module.exports = class Game {
 		// (essentially rendering one physics step behind real time)
 
 		// update renderable positions and error deltas
-		for (const body of this.getSolver().bodies) {
+		const gameState = this.getGameState();
+		for (const body of gameState.solver.bodies) {
 			const errors = this.errorMap[body.id];
 			const prevPos = body.originalPrevPos.minus(errors);
 			const prevAngle = body.prevTrans.radians - errors.r;
@@ -92,8 +99,8 @@ module.exports = class Game {
 			}
 		}
 
-		if (this.ship) {
-			const shipId = this.idMap[this.ship.bodyId];
+		if (gameState.ship.bodyId != null) {
+			const shipId = this.idMap[gameState.ship.bodyId];
 			const renderable = this.renderables[shipId];
 			this.camera.x += (renderable.x - this.camera.x) * .99;
 			this.camera.y += (renderable.y - this.camera.y) * .99;
@@ -101,7 +108,7 @@ module.exports = class Game {
 
 		this.renderer.render(this.camera, this.scene);
 	}
-	tryApplyUpdate(frameId, solver) {
+	tryApplyUpdate(frameId, gameState) {
 		if (
 			this.latestSync == null ||
 			this.latestSync.frameId !== frameId
@@ -109,8 +116,10 @@ module.exports = class Game {
 			return;
 		}
 
-		this.ship = this.latestSync.ship;
-		for (const update of this.latestSync.updates) {
+		gameState.ship.bodyId = this.latestSync.ship.bodyId;
+		gameState.ship.hp = this.latestSync.ship.hp;
+
+		for (const update of this.latestSync.bodies) {
 			if (this.idMap[update.id] == null) {
 				const body = new Body({
 					position: update.position,
@@ -131,7 +140,7 @@ module.exports = class Game {
 
 				const renderable = this.renderer.getInstance(shape, material);
 
-				solver.addBody(body);
+				gameState.solver.addBody(body);
 				this.scene.add(renderable);
 
 				this.idMap[update.id] = body.id;
@@ -139,7 +148,7 @@ module.exports = class Game {
 				this.renderables[body.id] = renderable;
 			} else {
 				const id = this.idMap[update.id];
-				const body = solver.bodyMap[id];
+				const body = gameState.solver.bodyMap[id];
 				const errors = this.errorMap[id];
 
 				if (
@@ -197,42 +206,42 @@ module.exports = class Game {
 			this.frameId - this.latestSync.frameId >= this.frameBuffer.length ?
 			this.latestSync.frameId :
 			this.frameId;
-		const solver = this.frameBuffer[this.frameId - frameId];
+		const gameState = this.frameBuffer[this.frameId - frameId];
 
 		// step forward and apply sync
 		while (frameId < nextFrameId) {
 			const index = this.frameId - frameId;
 
 			const action = this.actionBuffer[index];
-			if (action != null && solver.bodyMap[action.body.id] == null) {
-				solver.addBody(fork.cloneBody(action.body));
+			if (action != null && gameState.solver.bodyMap[action.body.id] == null) {
+				gameState.solver.addBody(fork.cloneBody(action.body));
 			}
 
-			this.frameBuffer[index] = fork(solver);
-			solver.solve(physTime);
-			this.tryApplyUpdate(frameId, solver);
+			this.frameBuffer[index] = gameState.fork();
+			gameState.solver.solve(physTime);
+			this.tryApplyUpdate(frameId, gameState);
 			frameId++;
 		}
 
 		// add current frame to buffer
-		this.frameBuffer.unshift(solver);
+		this.frameBuffer.unshift(gameState);
 		this.frameBuffer.pop();
 		this.actionBuffer.unshift(null);
 		const expiredAction = this.actionBuffer.pop();
 
 		// delete bodies and data from expired actions
 		if (expiredAction != null && !expiredAction.acked) {
-			for (const solver of this.frameBuffer) {
-				const body = solver.bodyMap[expiredAction.body.id];
-				if (body) {
-					solver.removeBody(body);
+				for (const gameState of this.frameBuffer) {
+					const body = gameState.solver.bodyMap[expiredAction.body.id];
+					if (body) {
+						gameState.solver.removeBody(body);
+					}
 				}
-			}
 
-			delete this.errorMap[expiredAction.body.id];
-			delete this.renderables[expiredAction.body.id];
-			this.scene.delete(expiredAction.renderable);
-		}
+				delete this.errorMap[expiredAction.body.id];
+				delete this.renderables[expiredAction.body.id];
+				this.scene.delete(expiredAction.renderable);
+			}
 
 		// update frameId
 		this.frameId = frameId;
@@ -289,7 +298,7 @@ module.exports = class Game {
 			this.idMap[action.bodyId] = this.actionBuffer[index].body.id;
 		}
 	}
-	getSolver() {
+	getGameState() {
 		return this.frameBuffer[0];
 	}
 };

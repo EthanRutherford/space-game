@@ -4,16 +4,16 @@ const BodyState = require("./body-state");
 const TypedArray = require("./typed-array");
 
 const Sync = {
-	bytify: (state, frameId, ship, bodies) => {
+	bytify: (state, frameId, sync) => {
 		Uint32.bytify(state, frameId);
-		Ship.bytify(state, ship);
-		TypedArray.bytify(state, BodyState, bodies);
+		Ship.bytify(state, sync.ship);
+		TypedArray.bytify(state, BodyState, sync.bodies);
 	},
 	parse: (state) => {
 		return {
 			frameId: Uint32.parse(state),
 			ship: Ship.parse(state),
-			updates: TypedArray.parse(state, BodyState),
+			bodies: TypedArray.parse(state, BodyState),
 		};
 	},
 };

@@ -1,16 +1,22 @@
 const {performance} = require("perf_hooks");
-const {fork, Solver} = require("boxjs");
+const {Solver} = require("boxjs");
 const {physTime, physTimeMs} = require("../../shared/game/constants");
+const {GameState} = require("../../shared/game/game-state");
 const {createBox} = require("../../shared/game/actions");
 const Ship = require("../../shared/game/ship");
 
 module.exports = class Game {
 	constructor() {
-		this.postSolve = null;
+		const solver = new Solver();
+		const shipBody = createBox({x: 0, y: 0, dx: 0, dy: 0});
+		const ship = new Ship(shipBody.id);
+		solver.addBody(shipBody);
 
-		this.frameBuffer = [new Solver(), null, null, null, null];
+		const frame0 = new GameState(solver, ship);
+		this.frameBuffer = [frame0, null, null, null, null];
 		this.actionBuffer = [[], null, null, null, null];
 		this.oldestUnprocessedAction = 0;
+		this.postSolve = null;
 
 		const now = performance.now();
 		this.frameZero = Math.floor(now / physTimeMs) * physTimeMs;
@@ -18,13 +24,6 @@ module.exports = class Game {
 
 		this.stepLoop = this.stepLoop.bind(this);
 		this.stepLoop();
-
-		this.nextKey = 0;
-
-		// game data
-		const shipBody = createBox({x: 0, y: 0, dx: 0, dy: 0});
-		this.frameBuffer[0].addBody(shipBody);
-		this.ship = new Ship(shipBody.id);
 	}
 	stepLoop() {
 		// compensate for drift by scheduling using when
@@ -36,26 +35,26 @@ module.exports = class Game {
 
 		// prepare to replay history
 		let frameId = this.oldestUnprocessedAction;
-		const solver = this.frameBuffer[this.frameId - frameId];
+		const gameState = this.frameBuffer[this.frameId - frameId];
 
 		// apply actions and step forward
 		while (frameId <= this.frameId) {
 			const index = this.frameId - frameId;
 
 			for (const action of this.actionBuffer[index]) {
-				if (solver.bodyMap[action.body.id] == null) {
-					solver.addBody(action.body);
+				if (gameState.solver.bodyMap[action.body.id] == null) {
+					gameState.solver.addBody(action.body);
 				}
 			}
 
-			this.frameBuffer[index] = fork(solver);
-			solver.solve(physTime);
+			this.frameBuffer[index] = gameState.fork();
+			gameState.solver.solve(physTime);
 
 			frameId++;
 		}
 
 		// add current frame to buffer
-		this.frameBuffer.unshift(solver);
+		this.frameBuffer.unshift(gameState);
 		this.frameBuffer.pop();
 		this.actionBuffer.unshift([]);
 		this.actionBuffer.pop();
@@ -87,7 +86,11 @@ module.exports = class Game {
 
 		return false;
 	}
-	getBodies() {
-		return this.frameBuffer[0].bodies;
+	getState() {
+		const gameState = this.frameBuffer[0];
+		return {
+			ship: gameState.ship,
+			bodies: [...gameState.solver.bodies],
+		};
 	}
 };
