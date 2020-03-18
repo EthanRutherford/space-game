@@ -20,6 +20,7 @@ const {physTime, physTimeMs} = require("../../shared/game/constants");
 const {GameState} = require("../../shared/game/game-state");
 const {createBox} = require("../../shared/game/actions");
 const Ship = require("../../shared/game/ship");
+const {Action} = require("../../shared/serial");
 const {vLerp, aLerp} = require("../logic/util");
 
 module.exports = class Game {
@@ -29,7 +30,7 @@ module.exports = class Game {
 
 		const frame0 = new GameState(solver, ship);
 		this.frameBuffer = [frame0, null, null, null, null];
-		this.actionBuffer = [null, null, null, null, null];
+		this.actionBuffer = [[], null, null, null, null];
 
 		// create renderer and related data
 		this.renderer = new Renderer(canvas);
@@ -212,9 +213,10 @@ module.exports = class Game {
 		while (frameId < nextFrameId) {
 			const index = this.frameId - frameId;
 
-			const action = this.actionBuffer[index];
-			if (action != null && gameState.solver.bodyMap[action.body.id] == null) {
-				gameState.solver.addBody(fork.cloneBody(action.body));
+			for (const action of this.actionBuffer[index]) {
+				if (gameState.solver.bodyMap[action.body.id] == null) {
+					gameState.solver.addBody(fork.cloneBody(action.body));
+				}
 			}
 
 			this.frameBuffer[index] = gameState.fork();
@@ -226,11 +228,12 @@ module.exports = class Game {
 		// add current frame to buffer
 		this.frameBuffer.unshift(gameState);
 		this.frameBuffer.pop();
-		this.actionBuffer.unshift(null);
-		const expiredAction = this.actionBuffer.pop();
+		this.actionBuffer.unshift([]);
+		const expiredActions = this.actionBuffer.pop();
 
 		// delete bodies and data from expired actions
-		if (expiredAction != null && !expiredAction.acked) {
+		for (const expiredAction of expiredActions || []) {
+			if (!expiredAction.acked) {
 				for (const gameState of this.frameBuffer) {
 					const body = gameState.solver.bodyMap[expiredAction.body.id];
 					if (body) {
@@ -242,6 +245,7 @@ module.exports = class Game {
 				delete this.renderables[expiredAction.body.id];
 				this.scene.delete(expiredAction.renderable);
 			}
+		}
 
 		// update frameId
 		this.frameId = frameId;
@@ -264,7 +268,7 @@ module.exports = class Game {
 		}
 	}
 	tryAddAction(action) {
-		if (this.actionBuffer[0] == null) {
+		if (action.type === Action.debug) {
 			action.body = createBox(action);
 
 			const shape = new Shape(
@@ -281,21 +285,22 @@ module.exports = class Game {
 
 			this.errorMap[action.body.id] = {x: 0, y: 0, r: 0};
 			this.renderables[action.body.id] = action.renderable;
-			this.actionBuffer[0] = action;
+			this.actionBuffer[0].push(action);
 
 			return true;
 		}
 
 		return false;
 	}
-	ackAction(action) {
+	ackAction(ack) {
 		if (
-			action.frameId <= this.frameId &&
-			action.frameId > this.frameId - this.frameBuffer.length
+			ack.frameId <= this.frameId &&
+			ack.frameId > this.frameId - this.frameBuffer.length
 		) {
-			const index = this.frameId - action.frameId;
-			this.actionBuffer[index].acked = true;
-			this.idMap[action.bodyId] = this.actionBuffer[index].body.id;
+			const index = this.frameId - ack.frameId;
+			const action = this.actionBuffer[index].find((a) => a.type === Action.debug);
+			action.acked = true;
+			this.idMap[ack.bodyId] = action.body.id;
 		}
 	}
 	getGameState() {
