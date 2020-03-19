@@ -7,6 +7,9 @@ const {
 		OrthoCamera,
 		VectorMaterial,
 	},
+	shaders: {
+		MotionBlur,
+	},
 } = require("2d-gl");
 const {
 	fork,
@@ -21,6 +24,7 @@ const {GameState} = require("../../shared/game/game-state");
 const {createBox} = require("../../shared/game/actions");
 const Ship = require("../../shared/game/ship");
 const {Action} = require("../../shared/serial");
+const BgShader = require("../logic/background-shader");
 const {vLerp, aLerp} = require("../logic/util");
 
 module.exports = class Game {
@@ -37,6 +41,12 @@ module.exports = class Game {
 		this.scene = new Scene({bgColor: rgba(.1, .1, .1, 1)});
 		this.camera = new OrthoCamera(0, 0, 20);
 		this.scene.getVisibleFunc = this.getVisibleFunc.bind(this);
+
+		// add shaders
+		const blurShader = this.renderer.createShader(MotionBlur);
+		const bgShader = this.renderer.createShader(BgShader);
+		this.scene.addPostProcShader(blurShader);
+		this.scene.setBackgroundShader(bgShader);
 
 		// start render and step loops
 		this.animLoop = this.animLoop.bind(this);
