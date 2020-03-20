@@ -131,7 +131,10 @@ module.exports = class Game {
 		gameState.ship.hp = this.latestSync.ship.hp;
 
 		for (const update of this.latestSync.bodies) {
-			if (this.idMap[update.id] == null) {
+			if (
+				this.idMap[update.id] == null ||
+				gameState.solver.bodyMap[this.idMap[update.id]] == null
+			) {
 				const body = new Body({
 					position: update.position,
 					angle: update.radians,
@@ -203,24 +206,30 @@ module.exports = class Game {
 		// compensate for drift by scheduling using when
 		// the next frame *should* be
 		const now = performance.now();
-		const nextFrameId = Math.round((now - this.frameZero) / physTimeMs) + 1;
-		const nextFrameTime = this.frameZero + (nextFrameId * physTimeMs);
+		const currentFrameId = Math.round((now - this.frameZero) / physTimeMs);
+		const nextFrameTime = this.frameZero + ((currentFrameId + 1) * physTimeMs);
 		setTimeout(this.stepLoop, nextFrameTime - now);
 
 		// just skip ahead if we've fallen behind
-		if (nextFrameId - this.frameId > 1) {
-			this.frameId = nextFrameId - 1;
+		if (currentFrameId !== this.frameId) {
+			this.frameId = currentFrameId;
+		}
+
+		// adjust framezero if we're recieving syncs from the future
+		if (this.latestSync && this.latestSync.frameId > this.frameId) {
+			this.frameZero -= this.latestSync.frameId - this.frameId * physTimeMs;
+			this.frameId = this.latestSync.frameId;
 		}
 
 		// prepare to replay time
 		let frameId = this.latestSync &&
-			this.frameId - this.latestSync.frameId >= this.frameBuffer.length ?
+			this.frameId - this.latestSync.frameId < this.frameBuffer.length ?
 			this.latestSync.frameId :
 			this.frameId;
 		const gameState = this.frameBuffer[this.frameId - frameId];
 
 		// step forward and apply sync
-		while (frameId < nextFrameId) {
+		while (frameId <= this.frameId) {
 			const index = this.frameId - frameId;
 
 			for (const action of this.actionBuffer[index]) {
@@ -268,14 +277,7 @@ module.exports = class Game {
 		this.frameId = Math.floor(time / physTimeMs) + 1;
 	}
 	updateSync(sync) {
-		const now = performance.now();
-		const nextFrameId = Math.floor((now - this.frameZero) / physTimeMs) + 1;
-		if (
-			sync.frameId <= nextFrameId &&
-			sync.frameId > nextFrameId - this.frameBuffer.length
-		) {
-			this.latestSync = sync;
-		}
+		this.latestSync = sync;
 	}
 	tryAddAction(action) {
 		if (action.type === Action.debug) {

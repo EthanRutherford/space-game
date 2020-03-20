@@ -56,16 +56,16 @@ function synchronize(ws, frameZero) {
 			const transitTime = acc / count / 2;
 			ws.send(bytify(Timing, gameTime + transitTime), handleError);
 
-			// reset and schedule another synchronization pass in 2 minutes
+			// reset and schedule another synchronization pass in 30 seconds
 			acc /= count;
 			count = 1;
-			setTimeout(ping, 2 * 60 * 1000);
+			setTimeout(ping, 30 * 1000);
 		} else {
 			ping();
 		}
 	});
 
-	setTimeout(ping, 20);
+	setTimeout(ping, 100);
 }
 
 function initGameClient(game, ws) {
