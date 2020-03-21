@@ -1,4 +1,4 @@
-const {Bool, Uint8, Uint32, Float} = require("./primitives");
+const {Bools, Uint8, Uint32, Float} = require("./primitives");
 
 const Debug = {
 	bytify: (state, action) => {
@@ -17,16 +17,20 @@ const Debug = {
 
 const FlightControls = {
 	bytify: (state, action) => {
-		Bool.bytify(state, action.forward);
-		Bool.bytify(state, action.backward);
-		Bool.bytify(state, action.left);
-		Bool.bytify(state, action.right);
+		Bools.bytify(state, [
+			action.forward,
+			action.backward,
+			action.left,
+			action.right,
+		], 4);
 	},
 	parse: (state, action) => {
-		action.forward = Bool.parse(state);
-		action.backward = Bool.parse(state);
-		action.left = Bool.parse(state);
-		action.right = Bool.parse(state);
+		[
+			action.forward,
+			action.backward,
+			action.left,
+			action.right,
+		] = Bools.parse(state, 4);
 	},
 };
 

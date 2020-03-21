@@ -25,7 +25,7 @@ function App() {
 	}
 
 	if (page === "game") {
-		return j([Game, {channel: userManager.channel}]);
+		return j([Game, userManager]);
 	}
 
 	return Error("bad");

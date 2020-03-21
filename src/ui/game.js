@@ -1,15 +1,18 @@
-const {useRef, useEffect} = require("react");
+const {useRef, useMemo, useEffect} = require("react");
 const j = require("react-jenny");
 const {Math: {Vector2D}} = require("boxjs");
+const {roleIds} = require("../../shared/game/roles");
 const {Timing, Action, ActionAck, Sync} = require("../../shared/serial");
 const Game = require("../logic/game");
 
 module.exports = function GameUi(props) {
 	const canvas = useRef();
-	const game = useRef({});
+	const game = useRef();
+	const controls = useMemo(() => ({}), []);
 	useEffect(function() {
 		// create game
-		game.current = new Game(canvas.current);
+		game.current = new Game(canvas.current, props.role);
+		game.current.postSolve = postSolve;
 
 		// listen for updates
 		props.channel.addListener((message) => {
@@ -21,7 +24,24 @@ module.exports = function GameUi(props) {
 				game.current.updateSync(message.data);
 			}
 		});
+
+		// add global listeners
+		window.addEventListener("keydown", keyDown);
+		window.addEventListener("keyup", keyUp);
 	}, []);
+
+	function postSolve(frameId) {
+		if (props.role === roleIds.pilot) {
+			const action = {
+				type: Action.flightControls,
+				frameId,
+				...controls,
+			};
+
+			game.current.addAction(action);
+			props.channel.sendAction(action);
+		}
+	}
 
 	function mouseDown(event) {
 		if (event.button !== 0) {
@@ -60,9 +80,8 @@ module.exports = function GameUi(props) {
 				dx: v.x * 5, dy: v.y * 5,
 			};
 
-			if (game.current.tryAddAction(action)) {
-				props.channel.sendAction(action);
-			}
+			game.current.addAction(action);
+			props.channel.sendAction(action);
 
 			window.removeEventListener("mousemove", mouseMove);
 			window.removeEventListener("mouseup", mouseUp);
@@ -76,6 +95,34 @@ module.exports = function GameUi(props) {
 		game.current.camera.zoom = Math.max(
 			game.current.camera.zoom + event.deltaY / 100, 1,
 		);
+	}
+
+	function keyDown(event) {
+		if (props.role === roleIds.pilot) {
+			if (event.key === "w") {
+				controls.forward = true;
+			} else if (event.key === "a") {
+				controls.left = true;
+			} else if (event.key === "s") {
+				controls.backward = true;
+			} else if (event.key === "d") {
+				controls.right = true;
+			}
+		}
+	}
+
+	function keyUp(event) {
+		if (props.role === roleIds.pilot) {
+			if (event.key === "w") {
+				controls.forward = false;
+			} else if (event.key === "a") {
+				controls.left = false;
+			} else if (event.key === "s") {
+				controls.backward = false;
+			} else if (event.key === "d") {
+				controls.right = false;
+			}
+		}
 	}
 
 	return j({canvas: {

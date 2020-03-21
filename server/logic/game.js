@@ -2,8 +2,9 @@ const {performance} = require("perf_hooks");
 const {Solver} = require("boxjs");
 const {physTime, physTimeMs} = require("../../shared/game/constants");
 const {GameState} = require("../../shared/game/game-state");
-const {createBox} = require("../../shared/game/actions");
+const {createBox, flyShip} = require("../../shared/game/actions");
 const Ship = require("../../shared/game/ship");
+const {Action} = require("../../shared/serial");
 
 module.exports = class Game {
 	constructor() {
@@ -42,8 +43,13 @@ module.exports = class Game {
 			const index = this.frameId - frameId;
 
 			for (const action of this.actionBuffer[index]) {
-				if (gameState.solver.bodyMap[action.body.id] == null) {
-					gameState.solver.addBody(action.body);
+				if (action.type === Action.debug) {
+					if (gameState.solver.bodyMap[action.body.id] == null) {
+						gameState.solver.addBody(action.body);
+					}
+				} else if (action.type === Action.flightControls) {
+					const shipBody = gameState.solver.bodyMap[gameState.ship.bodyId];
+					flyShip(shipBody, action);
 				}
 			}
 
@@ -81,7 +87,10 @@ module.exports = class Game {
 				action.frameId,
 			);
 
-			return true;
+			if (action.type === Action.debug) {
+				action.body = createBox(action);
+				return true;
+			}
 		}
 
 		return false;

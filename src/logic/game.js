@@ -21,7 +21,7 @@ const {
 } = require("boxjs");
 const {physTime, physTimeMs} = require("../../shared/game/constants");
 const {GameState} = require("../../shared/game/game-state");
-const {createBox} = require("../../shared/game/actions");
+const {createBox, flyShip} = require("../../shared/game/actions");
 const Ship = require("../../shared/game/ship");
 const {Action} = require("../../shared/serial");
 const BgShader = require("../logic/background-shader");
@@ -233,8 +233,16 @@ module.exports = class Game {
 			const index = this.frameId - frameId;
 
 			for (const action of this.actionBuffer[index]) {
-				if (gameState.solver.bodyMap[action.body.id] == null) {
-					gameState.solver.addBody(fork.cloneBody(action.body));
+				if (action.type === Action.debug) {
+					if (gameState.solver.bodyMap[action.body.id] == null) {
+						gameState.solver.addBody(fork.cloneBody(action.body));
+					}
+				} else if (action.type === Action.flightControls) {
+					const shipId = this.idMap[gameState.ship.bodyId];
+					const shipBody = gameState.solver.bodyMap[shipId];
+					if (shipBody != null) {
+						flyShip(shipBody, action);
+					}
 				}
 			}
 
@@ -252,22 +260,29 @@ module.exports = class Game {
 
 		// delete bodies and data from expired actions
 		for (const expiredAction of expiredActions || []) {
-			if (!expiredAction.acked) {
-				for (const gameState of this.frameBuffer) {
-					const body = gameState.solver.bodyMap[expiredAction.body.id];
-					if (body) {
-						gameState.solver.removeBody(body);
+			if (expiredAction.type === Action.debug) {
+				if (!expiredAction.acked) {
+					for (const gameState of this.frameBuffer) {
+						const body = gameState.solver.bodyMap[expiredAction.body.id];
+						if (body) {
+							gameState.solver.removeBody(body);
+						}
 					}
-				}
 
-				delete this.errorMap[expiredAction.body.id];
-				delete this.renderables[expiredAction.body.id];
-				this.scene.delete(expiredAction.renderable);
+					delete this.errorMap[expiredAction.body.id];
+					delete this.renderables[expiredAction.body.id];
+					this.scene.delete(expiredAction.renderable);
+				}
 			}
 		}
 
 		// update frameId
 		this.frameId = frameId;
+
+		// post solve
+		if (this.postSolve) {
+			this.postSolve(this.frameId);
+		}
 	}
 	updateGameTime(time) {
 		// the server sends the current server game time, already
@@ -279,7 +294,7 @@ module.exports = class Game {
 	updateSync(sync) {
 		this.latestSync = sync;
 	}
-	tryAddAction(action) {
+	addAction(action) {
 		if (action.type === Action.debug) {
 			action.body = createBox(action);
 
@@ -297,12 +312,9 @@ module.exports = class Game {
 
 			this.errorMap[action.body.id] = {x: 0, y: 0, r: 0};
 			this.renderables[action.body.id] = action.renderable;
-			this.actionBuffer[0].push(action);
-
-			return true;
 		}
 
-		return false;
+		this.actionBuffer[0].push(action);
 	}
 	ackAction(ack) {
 		if (

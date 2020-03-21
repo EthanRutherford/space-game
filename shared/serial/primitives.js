@@ -1,9 +1,45 @@
+// a Bool is a bit of a last-resort, it uses a full 8 bits to transmit a single bit value
 const Bool = {
 	bytify: (state, value) => {
 		state.dataView.setUint8(state.index++, value);
 	},
 	parse: (state) => {
 		return !!state.dataView.getUint8(state.index++);
+	},
+};
+
+// Bools, in comparison, will pack an array of bits into as few bytes as possible
+const Bools = {
+	bytify: (state, values, count) => {
+		const uint8Count = Math.ceil(count / 8);
+		for (let i = 0; i < uint8Count; i++) {
+			let bitmask = 0;
+
+			const offset = i * 8;
+			for (let j = 0; offset + j < count; j++) {
+				if (values[offset + j]) {
+					bitmask |= 1 << j;
+				}
+			}
+
+			state.dataView.setUint8(state.index++, bitmask);
+		}
+	},
+	parse: (state, count) => {
+		const uint8Count = Math.ceil(count / 8);
+		const values = [];
+
+		for (let i = 0; i < uint8Count; i++) {
+			let field = state.dataView.getUint8(state.index++);
+
+			const offset = i * 8;
+			for (let j = offset; j < count; j++) {
+				values.push(!!(field & 1));
+				field >>= 1;
+			}
+		}
+
+		return values;
 	},
 };
 
@@ -98,6 +134,6 @@ const Double = {
 };
 
 module.exports = {
-	Bool, Uint8, Uint16, Uint32,
+	Bool, Bools, Uint8, Uint16, Uint32,
 	Int8, Int16, Int32, Float, Double,
 };
