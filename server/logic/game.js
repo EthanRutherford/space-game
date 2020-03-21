@@ -1,16 +1,16 @@
 const {performance} = require("perf_hooks");
 const {Solver} = require("boxjs");
 const {physTime, physTimeMs} = require("../../shared/game/constants");
-const {GameState} = require("../../shared/game/game-state");
-const {createBox, flyShip} = require("../../shared/game/actions");
-const Ship = require("../../shared/game/ship");
+const GameState = require("../../shared/game/game-state");
+const {flyShip} = require("../../shared/game/actions");
+const {Ship, DebugBox} = require("../../shared/game/objects");
 const {Action} = require("../../shared/serial");
 
 module.exports = class Game {
 	constructor() {
 		const solver = new Solver();
-		const shipBody = createBox({x: 0, y: 0, dx: 0, dy: 0});
-		const ship = new Ship(shipBody.id);
+		const shipBody = Ship.createBody();
+		const ship = new Ship(shipBody);
 		solver.addBody(shipBody);
 
 		const frame0 = new GameState(solver, ship);
@@ -45,11 +45,12 @@ module.exports = class Game {
 			for (const action of this.actionBuffer[index]) {
 				if (action.type === Action.debug) {
 					if (gameState.solver.bodyMap[action.body.id] == null) {
-						gameState.solver.addBody(action.body);
+						const debugBox = new DebugBox(action.body, action.clientId, frameId);
+						gameState.debugBoxes.push(debugBox);
+						gameState.solver.addBody(debugBox.body);
 					}
 				} else if (action.type === Action.flightControls) {
-					const shipBody = gameState.solver.bodyMap[gameState.ship.bodyId];
-					flyShip(shipBody, action);
+					flyShip(gameState.ship.body, action);
 				}
 			}
 
@@ -74,13 +75,13 @@ module.exports = class Game {
 		this.frameId = frameId;
 		this.oldestUnprocessedAction = this.frameId;
 	}
-	tryAddAction(action) {
+	addAction(action, clientId) {
 		if (
 			action.frameId <= this.frameId &&
 			action.frameId > this.frameId - this.frameBuffer.length
 		) {
 			const index = this.frameId - action.frameId;
-			action.body = createBox(action);
+			action.clientId = clientId;
 			this.actionBuffer[index].push(action);
 			this.oldestUnprocessedAction = Math.min(
 				this.oldestUnprocessedAction,
@@ -88,18 +89,15 @@ module.exports = class Game {
 			);
 
 			if (action.type === Action.debug) {
-				action.body = createBox(action);
-				return true;
+				action.body = DebugBox.createBody(action);
 			}
 		}
-
-		return false;
 	}
 	getState() {
 		const gameState = this.frameBuffer[0];
 		return {
 			ship: gameState.ship,
-			bodies: [...gameState.solver.bodies],
+			debugBoxes: gameState.debugBoxes,
 		};
 	}
 };

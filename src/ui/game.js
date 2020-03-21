@@ -2,7 +2,7 @@ const {useRef, useMemo, useEffect} = require("react");
 const j = require("react-jenny");
 const {Math: {Vector2D}} = require("boxjs");
 const {roleIds} = require("../../shared/game/roles");
-const {Timing, Action, ActionAck, Sync} = require("../../shared/serial");
+const {Timing, Action, Sync} = require("../../shared/serial");
 const Game = require("../logic/game");
 
 module.exports = function GameUi(props) {
@@ -11,15 +11,13 @@ module.exports = function GameUi(props) {
 	const controls = useMemo(() => ({}), []);
 	useEffect(function() {
 		// create game
-		game.current = new Game(canvas.current, props.role);
+		game.current = new Game(canvas.current, props.userId);
 		game.current.postSolve = postSolve;
 
 		// listen for updates
 		props.channel.addListener((message) => {
 			if (message.type === Timing) {
 				game.current.updateGameTime(message.data.time);
-			} else if (message.type === ActionAck) {
-				game.current.ackAction(message.data);
 			} else if (message.type === Sync) {
 				game.current.updateSync(message.data);
 			}
@@ -76,8 +74,8 @@ module.exports = function GameUi(props) {
 			const action = {
 				type: Action.debug,
 				frameId: game.current.frameId,
-				x: origin.x, y: origin.y,
-				dx: v.x * 5, dy: v.y * 5,
+				position: origin,
+				velocity: v.times(5),
 			};
 
 			game.current.addAction(action);

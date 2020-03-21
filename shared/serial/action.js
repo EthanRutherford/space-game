@@ -1,17 +1,14 @@
-const {Bools, Uint8, Uint32, Float} = require("./primitives");
+const {Bools, Uint8, Uint32} = require("./primitives");
+const Vector = require("./vector");
 
 const Debug = {
 	bytify: (state, action) => {
-		Float.bytify(state, action.x);
-		Float.bytify(state, action.y);
-		Float.bytify(state, action.dx);
-		Float.bytify(state, action.dy);
+		Vector.bytify(state, action.position);
+		Vector.bytify(state, action.velocity);
 	},
 	parse: (state, action) => {
-		action.x = Float.parse(state);
-		action.y = Float.parse(state);
-		action.dx = Float.parse(state);
-		action.dy = Float.parse(state);
+		action.position = Vector.parse(state);
+		action.velocity = Vector.parse(state);
 	},
 };
 

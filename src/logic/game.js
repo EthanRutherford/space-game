@@ -15,20 +15,20 @@ const {
 	fork,
 	Math: {cleanAngle},
 	Solver,
-	Body,
 	AABB,
-	Shapes: {Polygon},
 } = require("boxjs");
 const {physTime, physTimeMs} = require("../../shared/game/constants");
-const {GameState} = require("../../shared/game/game-state");
-const {createBox, flyShip} = require("../../shared/game/actions");
-const Ship = require("../../shared/game/ship");
+const GameState = require("../../shared/game/game-state");
+const {flyShip} = require("../../shared/game/actions");
+const {Ship, DebugBox} = require("../../shared/game/objects");
 const {Action} = require("../../shared/serial");
 const BgShader = require("../logic/background-shader");
 const {vLerp, aLerp} = require("../logic/util");
 
 module.exports = class Game {
-	constructor(canvas) {
+	constructor(canvas, userId) {
+		this.userId = userId;
+
 		const solver = new Solver();
 		const ship = new Ship(null);
 
@@ -86,8 +86,22 @@ module.exports = class Game {
 		// of the current physics step in time we are.
 		// (essentially rendering one physics step behind real time)
 
-		// update renderable positions and error deltas
+		// update camera position
 		const gameState = this.getGameState();
+		if (gameState.ship.body != null) {
+			const errors = this.errorMap[gameState.ship.body.id];
+			const prevPos = gameState.ship.body.prevPos.minus(errors);
+			const currentPos = gameState.ship.body.position.minus({
+				x: errors.x * .85,
+				y: errors.y * .85,
+			});
+
+			const pos = vLerp(prevPos, currentPos, ratio);
+			this.camera.x += (pos.x - this.camera.x) * .99;
+			this.camera.y += (pos.y - this.camera.y) * .99;
+		}
+
+		// update renderable positions and error deltas
 		for (const body of gameState.solver.bodies) {
 			const errors = this.errorMap[body.id];
 			const prevPos = body.originalPrevPos.minus(errors);
@@ -110,14 +124,14 @@ module.exports = class Game {
 			}
 		}
 
-		if (gameState.ship.bodyId != null) {
-			const shipId = this.idMap[gameState.ship.bodyId];
-			const renderable = this.renderables[shipId];
-			this.camera.x += (renderable.x - this.camera.x) * .99;
-			this.camera.y += (renderable.y - this.camera.y) * .99;
-		}
-
 		this.renderer.render(this.camera, this.scene);
+	}
+	addBody(gameState, serverId, body, renderable) {
+		gameState.solver.addBody(body);
+		this.scene.add(renderable);
+		this.idMap[serverId] = body.id;
+		this.errorMap[body.id] = {x: 0, y: 0, r: 0};
+		this.renderables[body.id] = renderable;
 	}
 	tryApplyUpdate(frameId, gameState) {
 		if (
@@ -127,21 +141,32 @@ module.exports = class Game {
 			return;
 		}
 
-		gameState.ship.bodyId = this.latestSync.ship.bodyId;
-		gameState.ship.hp = this.latestSync.ship.hp;
+		const updates = [];
 
-		for (const update of this.latestSync.bodies) {
-			if (
-				this.idMap[update.id] == null ||
-				gameState.solver.bodyMap[this.idMap[update.id]] == null
-			) {
-				const body = new Body({
-					position: update.position,
-					angle: update.radians,
-					velocity: update.velocity,
-					angularVelocity: update.angularVelocity,
-					shapes: [new Polygon().setAsBox(.5, .5)],
-				});
+		gameState.ship.hp = this.latestSync.ship.hp;
+		if (this.idMap[this.latestSync.ship.body.id] == null) {
+			const body = Ship.createBody(this.latestSync.ship.body);
+			const shape = new Shape(body.shapes[0].originalPoints);
+			const blue = rgba(0, 0, 1, 1);
+			const material = new VectorMaterial(
+				[blue, blue, blue, blue],
+				VectorMaterial.triangleFan,
+			);
+
+			const renderable = this.renderer.getInstance(shape, material);
+			this.addBody(gameState, this.latestSync.ship.body.id, body, renderable);
+			gameState.ship.body = body;
+		} else {
+			updates.push(this.latestSync.ship.body);
+		}
+
+		for (const debugBox of this.latestSync.debugBoxes) {
+			if (debugBox.clientId === this.userId) {
+				this.ackDebugAction(debugBox);
+			}
+
+			if (this.idMap[debugBox.body.id] == null) {
+				const body = DebugBox.createBody(debugBox.body);
 
 				const shape = new Shape(
 					body.shapes[0].originalPoints,
@@ -153,43 +178,41 @@ module.exports = class Game {
 				);
 
 				const renderable = this.renderer.getInstance(shape, material);
-
-				gameState.solver.addBody(body);
-				this.scene.add(renderable);
-
-				this.idMap[update.id] = body.id;
-				this.errorMap[body.id] = {x: 0, y: 0, r: 0};
-				this.renderables[body.id] = renderable;
+				this.addBody(gameState, debugBox.body.id, body, renderable);
 			} else {
-				const id = this.idMap[update.id];
-				const body = gameState.solver.bodyMap[id];
-				const errors = this.errorMap[id];
-
-				if (
-					Math.abs(update.position.x - body.position.x) < .0001 &&
-					Math.abs(update.position.y - body.position.y) < .0001 &&
-					Math.abs(update.radians - body.transform.radians) < .0001
-				) {
-					continue;
-				}
-
-				// update error offsets
-				const curX = body.position.x - errors.x;
-				const curY = body.position.y - errors.y;
-				const curR = body.transform.radians - errors.r;
-				errors.x = update.position.x - curX;
-				errors.y = update.position.y - curY;
-				errors.r = cleanAngle(update.radians - curR);
-
-				// snap physics state to synced position
-				body.position.set(update.position);
-				body.transform.radians = update.radians;
-				body.velocity.set(update.velocity);
-				body.angularVelocity = update.angularVelocity;
-
-				// wake body
-				body.setAsleep(false);
+				updates.push(debugBox.body);
 			}
+		}
+
+		for (const update of updates) {
+			const id = this.idMap[update.id];
+			const body = gameState.solver.bodyMap[id];
+			const errors = this.errorMap[body.id];
+
+			if (
+				Math.abs(update.position.x - body.position.x) < .0001 &&
+				Math.abs(update.position.y - body.position.y) < .0001 &&
+				Math.abs(update.radians - body.transform.radians) < .0001
+			) {
+				continue;
+			}
+
+			// update error offsets
+			const curX = body.position.x - errors.x;
+			const curY = body.position.y - errors.y;
+			const curR = body.transform.radians - errors.r;
+			errors.x = update.position.x - curX;
+			errors.y = update.position.y - curY;
+			errors.r = cleanAngle(update.radians - curR);
+
+			// snap physics state to synced position
+			body.position.set(update.position);
+			body.transform.radians = update.radians;
+			body.velocity.set(update.velocity);
+			body.angularVelocity = update.angularVelocity;
+
+			// wake body
+			body.setAsleep(false);
 		}
 
 		this.latestSync = null;
@@ -296,7 +319,7 @@ module.exports = class Game {
 	}
 	addAction(action) {
 		if (action.type === Action.debug) {
-			action.body = createBox(action);
+			action.body = DebugBox.createBody(action);
 
 			const shape = new Shape(
 				action.body.shapes[0].originalPoints,
@@ -316,15 +339,15 @@ module.exports = class Game {
 
 		this.actionBuffer[0].push(action);
 	}
-	ackAction(ack) {
+	ackDebugAction(debugBox) {
 		if (
-			ack.frameId <= this.frameId &&
-			ack.frameId > this.frameId - this.frameBuffer.length
+			debugBox.frameId <= this.frameId &&
+			debugBox.frameId > this.frameId - this.frameBuffer.length
 		) {
-			const index = this.frameId - ack.frameId;
+			const index = this.frameId - debugBox.frameId;
 			const action = this.actionBuffer[index].find((a) => a.type === Action.debug);
 			action.acked = true;
-			this.idMap[ack.bodyId] = action.body.id;
+			this.idMap[debugBox.body.id] = action.body.id;
 		}
 	}
 	getGameState() {

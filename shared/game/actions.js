@@ -1,18 +1,4 @@
-const {
-	Math: {Vector2D, clamp},
-	Body,
-	Shapes: {Polygon},
-} = require("boxjs");
-
-function createBox({x, y, dx, dy}) {
-	const body = new Body({
-		position: new Vector2D(x, y),
-		velocity: new Vector2D(dx, dy),
-		shapes: [new Polygon().setAsBox(.5, .5)],
-	});
-
-	return body;
-}
+const {Math: {Vector2D, clamp}} = require("boxjs");
 
 function flyShip(shipBody, controls) {
 	const v = new Vector2D(0, 0);
@@ -39,4 +25,4 @@ function flyShip(shipBody, controls) {
 	shipBody.setAsleep(false);
 }
 
-module.exports = {createBox, flyShip};
+module.exports = {flyShip};

@@ -6,7 +6,6 @@ const {
 	Sync,
 	Timing,
 	Action,
-	ActionAck,
 	bytify,
 	parse,
 } = require("../../shared/serial");
@@ -75,9 +74,7 @@ function initGameClient(game, ws) {
 	// add handler for game messages
 	ws.handleGameMessage = function(message) {
 		if (message.type === Action) {
-			if (game.tryAddAction(message.data)) {
-				ws.send(bytify(ActionAck, message.data), handleError);
-			}
+			game.addAction(message.data, ws.id);
 		}
 	};
 }

@@ -3,8 +3,7 @@ const Config = require("./config");
 const Sync = require("./sync");
 const Timing = require("./timing");
 const Action = require("./action");
-const ActionAck = require("./action-ack");
-const KIND_MAP = [Config, Sync, Timing, Action, ActionAck];
+const KIND_MAP = [Config, Sync, Timing, Action];
 KIND_MAP.forEach((kind, index) => kind.ID = index);
 
 // Big ol buffer (approximately 1MB) for messages.
@@ -51,7 +50,6 @@ module.exports = {
 	Sync,
 	Timing,
 	Action,
-	ActionAck,
 	bytify,
 	parse,
 };
