@@ -2,7 +2,7 @@ const {Uint8} = require("./primitives");
 const Config = require("./config");
 const Sync = require("./sync");
 const Timing = require("./timing");
-const Action = require("./action");
+const {Action} = require("./actions");
 const KIND_MAP = [Config, Sync, Timing, Action];
 KIND_MAP.forEach((kind, index) => kind.ID = index);
 

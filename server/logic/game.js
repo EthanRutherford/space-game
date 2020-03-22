@@ -50,10 +50,11 @@ module.exports = class Game {
 						gameState.solver.addBody(debugBox.body);
 					}
 				} else if (action.type === Action.flightControls) {
-					flyShip(gameState.ship.body, action);
+					gameState.ship.controls = action;
 				}
 			}
 
+			flyShip(gameState.ship.body, gameState.ship.controls);
 			this.frameBuffer[index] = gameState.fork();
 			gameState.solver.solve(physTime);
 

@@ -64,16 +64,42 @@ module.exports = class Game {
 		this.renderables = {};
 		this.latestSync = null;
 
-		// sprites :)
+		// sprites and other stuff
 		spriteLoader.get("ship").then((ship) => this.shipPng = ship);
+		this.baseFireVerts = [
+			{x: 0, y: 0},
+			{x: -.05, y: -.05},
+			{x: 0, y: -.5},
+			{x: .05, y: -.05},
+		];
+		this.fireShape1 = new Shape(
+			this.baseFireVerts.map((v) => ({x: v.x - .0625, y: v.y - .5})),
+		);
+		this.fireShape2 = new Shape(
+			this.baseFireVerts.map((v) => ({x: v.x + .0625, y: v.y - .5})),
+		);
+		const fireMaterial = new VectorMaterial([
+			rgba(.1, .2, 1, 1),
+			rgba(.8, 0, .2, 1),
+			rgba(.8, .6, 0, 1),
+			rgba(.8, 0, .2, 1),
+		]);
+		this.fire1 = this.renderer.getInstance(this.fireShape1, fireMaterial);
+		this.fire2 = this.renderer.getInstance(this.fireShape2, fireMaterial);
 	}
 	getVisibleFunc({x0, y0, x1, y1}) {
 		const visible = new Set();
 
-		this.getGameState().solver.query(new AABB(x0, y0, x1, y1), (shape) => {
+		const gameState = this.getGameState();
+		gameState.solver.query(new AABB(x0, y0, x1, y1), (shape) => {
 			const renderable = this.renderables[shape.body.id];
 			visible.add(renderable);
 		});
+
+		if (gameState.ship.controls.forward) {
+			visible.add(this.fire1);
+			visible.add(this.fire2);
+		}
 
 		return [...visible];
 	}
@@ -129,6 +155,27 @@ module.exports = class Game {
 			}
 		}
 
+		// update fire positions
+		if (gameState.ship.controls.forward) {
+			const ship = this.renderables[gameState.ship.body.id];
+			this.fire1.x = ship.x;
+			this.fire1.y = ship.y;
+			this.fire1.r = ship.r;
+			this.fire2.x = ship.x;
+			this.fire2.y = ship.y;
+			this.fire2.r = ship.r;
+
+			// add some fun randomness
+			const verts1 = this.baseFireVerts.map((v) => ({x: v.x - .0625, y: v.y - .5}));
+			const verts2 = this.baseFireVerts.map((v) => ({x: v.x + .0625, y: v.y - .5}));
+
+			verts1[2].x += (Math.floor(Math.random() * 3) - 1) * .01;
+			verts2[2].x += (Math.floor(Math.random() * 3) - 1) * .01;
+
+			this.fireShape1.update(verts1);
+			this.fireShape2.update(verts2);
+		}
+
 		this.renderer.render(this.camera, this.scene);
 	}
 	addBody(gameState, serverId, body, renderable) {
@@ -149,6 +196,7 @@ module.exports = class Game {
 		const updates = [];
 
 		gameState.ship.hp = this.latestSync.ship.hp;
+		gameState.ship.controls = this.latestSync.ship.controls;
 		if (this.idMap[this.latestSync.ship.body.id] == null) {
 			const body = Ship.createBody(this.latestSync.ship.body);
 			const shipShape = new Shape(
@@ -269,12 +317,12 @@ module.exports = class Game {
 						gameState.solver.addBody(fork.cloneBody(action.body));
 					}
 				} else if (action.type === Action.flightControls) {
-					const shipId = this.idMap[gameState.ship.bodyId];
-					const shipBody = gameState.solver.bodyMap[shipId];
-					if (shipBody != null) {
-						flyShip(shipBody, action);
-					}
+					gameState.ship.controls = action;
 				}
+			}
+
+			if (gameState.ship.body) {
+				flyShip(gameState.ship.body, gameState.ship.controls);
 			}
 
 			this.frameBuffer[index] = gameState.fork();

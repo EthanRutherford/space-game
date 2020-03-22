@@ -21,17 +21,23 @@ const FlightControls = {
 			action.right,
 		], 4);
 	},
-	parse: (state, action) => {
-		[
-			action.forward,
-			action.backward,
-			action.left,
-			action.right,
-		] = Bools.parse(state, 4);
+	parse: (state) => {
+		const bools = Bools.parse(state, 4);
+		return {
+			forward: bools[0],
+			backward: bools[1],
+			left: bools[2],
+			right: bools[3],
+		};
 	},
 };
 
-const ACTION_MAP = [FlightControls];
+const FlightControlsAction = {
+	bytify: FlightControls.bytify,
+	parse: (state, action) => Object.assign(action, FlightControls.parse(state)),
+};
+
+const ACTION_MAP = [FlightControlsAction];
 ACTION_MAP[255] = Debug;
 ACTION_MAP.forEach((kind, index) => kind.ID = index);
 
@@ -50,8 +56,8 @@ const Action = {
 		ACTION_MAP[action.type].parse(state, action);
 		return action;
 	},
-	flightControls: FlightControls.ID,
+	flightControls: FlightControlsAction.ID,
 	debug: Debug.ID,
 };
 
-module.exports = Action;
+module.exports = {FlightControls, Action};

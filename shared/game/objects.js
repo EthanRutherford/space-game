@@ -5,9 +5,10 @@ const {
 } = require("boxjs");
 
 class Ship {
-	constructor(body, hp = 100) {
+	constructor(body, hp = 100, controls = {}) {
 		this.body = body;
 		this.hp = hp;
+		this.controls = controls;
 	}
 }
 Ship.createBody = ({position, angle, velocity, angularVelocity} = {}) => {
