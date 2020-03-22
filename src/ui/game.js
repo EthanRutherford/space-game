@@ -46,15 +46,20 @@ module.exports = function GameUi(props) {
 			return;
 		}
 
-		const origin = game.current.renderer.viewportToWorld(
-			event.clientX,
-			event.clientY,
-			game.current.camera,
-		);
-		let v = new Vector2D(0, 0);
+		const clientOrigin = {x: event.clientX, y: event.clientY};
 
-		const mouseMove = (innerEvent) => {
-			v = Vector2D.clone(game.current.renderer.viewportToWorld(
+		const mouseUp = (innerEvent) => {
+			if (innerEvent.button !== 0) {
+				return;
+			}
+
+			const origin = game.current.renderer.viewportToWorld(
+				clientOrigin.x,
+				clientOrigin.y,
+				game.current.camera,
+			);
+
+			const v = Vector2D.clone(game.current.renderer.viewportToWorld(
 				innerEvent.clientX,
 				innerEvent.clientY,
 				game.current.camera,
@@ -63,12 +68,6 @@ module.exports = function GameUi(props) {
 			const length = v.length;
 			if (length > 10) {
 				v.mul(10 / length);
-			}
-		};
-
-		const mouseUp = (innerEvent) => {
-			if (innerEvent.button !== 0) {
-				return;
 			}
 
 			const action = {
@@ -81,11 +80,9 @@ module.exports = function GameUi(props) {
 			game.current.addAction(action);
 			props.channel.sendAction(action);
 
-			window.removeEventListener("mousemove", mouseMove);
 			window.removeEventListener("mouseup", mouseUp);
 		};
 
-		window.addEventListener("mousemove", mouseMove);
 		window.addEventListener("mouseup", mouseUp);
 	}
 
