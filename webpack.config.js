@@ -18,6 +18,14 @@ module.exports = (env) => ({
 					modules: true,
 				}},
 			],
+		}, {
+			test: /.png$/,
+			use: [
+				{loader: "file-loader", options: {
+					publicPath: "/dist",
+					esModule: false,
+				}},
+			],
 		}],
 	},
 	resolve: {extensions: [".js", ".json", ".css"]},

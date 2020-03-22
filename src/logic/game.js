@@ -6,6 +6,7 @@ const {
 		Shape,
 		OrthoCamera,
 		VectorMaterial,
+		SpriteMaterial,
 	},
 	shaders: {
 		MotionBlur,
@@ -24,6 +25,7 @@ const {Ship, DebugBox} = require("../../shared/game/objects");
 const {Action} = require("../../shared/serial");
 const BgShader = require("../logic/background-shader");
 const {vLerp, aLerp} = require("../logic/util");
+const spriteLoader = require("./sprites");
 
 module.exports = class Game {
 	constructor(canvas, userId) {
@@ -61,6 +63,9 @@ module.exports = class Game {
 		this.errorMap = {};
 		this.renderables = {};
 		this.latestSync = null;
+
+		// sprites :)
+		spriteLoader.get("ship").then((ship) => this.shipPng = ship);
 	}
 	getVisibleFunc({x0, y0, x1, y1}) {
 		const visible = new Set();
@@ -146,14 +151,16 @@ module.exports = class Game {
 		gameState.ship.hp = this.latestSync.ship.hp;
 		if (this.idMap[this.latestSync.ship.body.id] == null) {
 			const body = Ship.createBody(this.latestSync.ship.body);
-			const shape = new Shape(body.shapes[0].originalPoints);
-			const blue = rgba(0, 0, 1, 1);
-			const material = new VectorMaterial(
-				[blue, blue, blue, blue],
-				VectorMaterial.triangleFan,
+			const shipShape = new Shape(
+				[{x: -.5, y: -.5}, {x: .5, y: -.5}, {x: .5, y: .5}, {x: -.5, y: .5}],
+			);
+			// origin (0, 0) in an image is topleft
+			const shipMaterial = new SpriteMaterial(
+				[{x: 0, y: 1}, {x: 1, y: 1}, {x: 1, y: 0}, {x: 0, y: 0}],
+				this.shipPng,
 			);
 
-			const renderable = this.renderer.getInstance(shape, material);
+			const renderable = this.renderer.getInstance(shipShape, shipMaterial);
 			this.addBody(gameState, this.latestSync.ship.body.id, body, renderable);
 			gameState.ship.body = body;
 		} else {

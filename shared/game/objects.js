@@ -15,8 +15,12 @@ Ship.createBody = ({position, angle, velocity, angularVelocity} = {}) => {
 		position, angle,
 		velocity, angularVelocity,
 		shapes: [new Polygon().set([
-			new Vector2D(-.5, -.5),
-			new Vector2D(.5, -.5),
+			new Vector2D(-.4375, -.125),
+			new Vector2D(-.4375, -.25),
+			new Vector2D(-.125, -.46875),
+			new Vector2D(.125, -.46875),
+			new Vector2D(.4375, -.25),
+			new Vector2D(.4375, -.125),
 			new Vector2D(0, .5),
 		])],
 	});
