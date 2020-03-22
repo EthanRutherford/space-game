@@ -158,6 +158,7 @@ module.exports = class Game {
 			const shipMaterial = new SpriteMaterial(
 				[{x: 0, y: 1}, {x: 1, y: 1}, {x: 1, y: 0}, {x: 0, y: 0}],
 				this.shipPng,
+				false,
 			);
 
 			const renderable = this.renderer.getInstance(shipShape, shipMaterial);
