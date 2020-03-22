@@ -1,6 +1,6 @@
 const {useState, useEffect} = require("react");
 const DataChannel = require("./data-channel");
-const {Config} = require("../../shared/serial");
+const {Config} = require("Shared/serial");
 
 module.exports = class UserManager {
 	constructor() {

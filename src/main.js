@@ -1,7 +1,7 @@
 const {render} = require("react-dom");
 const {useState, useMemo} = require("react");
 const j = require("react-jenny");
-const {Config} = require("../shared/serial");
+const {Config} = require("Shared/serial");
 const UserManager = require("./logic/user-manager");
 const Menu = require("./ui/menu");
 const Game = require("./ui/game");

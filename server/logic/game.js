@@ -1,10 +1,10 @@
 const {performance} = require("perf_hooks");
 const {Solver} = require("boxjs");
-const {physTime, physTimeMs} = require("../../shared/game/constants");
-const GameState = require("../../shared/game/game-state");
-const {flyShip} = require("../../shared/game/actions");
-const {Ship, DebugBox} = require("../../shared/game/objects");
-const {Action} = require("../../shared/serial");
+const {physTime, physTimeMs} = require("Shared/game/constants");
+const GameState = require("Shared/game/game-state");
+const {flyShip} = require("Shared/game/actions");
+const {Ship, DebugBox} = require("Shared/game/objects");
+const {Action} = require("Shared/serial");
 
 module.exports = class Game {
 	constructor() {

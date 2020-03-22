@@ -1,6 +1,6 @@
 const {performance} = require("perf_hooks");
 const WebSocket = require("ws");
-const {roleIds} = require("../../shared/game/roles");
+const {roleIds} = require("Shared/game/roles");
 const {
 	Config,
 	Sync,
@@ -8,7 +8,7 @@ const {
 	Action,
 	bytify,
 	parse,
-} = require("../../shared/serial");
+} = require("Shared/serial");
 const Game = require("./game");
 
 // eslint-disable-next-line no-console

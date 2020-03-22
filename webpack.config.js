@@ -1,5 +1,6 @@
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const createServer = require("./server/logic/server");
+const path = require("path");
 
 const port = 9000;
 
@@ -28,7 +29,12 @@ module.exports = (env) => ({
 			],
 		}],
 	},
-	resolve: {extensions: [".js", ".json", ".css"]},
+	resolve: {
+		extensions: [".js", ".json", ".css"],
+		alias: {
+			Shared: path.resolve(__dirname, "shared/"),
+		},
+	},
 	mode: env === "prod" ? "production" : "development",
 	devtool: env === "prod" ? "" : "eval-source-map",
 	devServer: {
