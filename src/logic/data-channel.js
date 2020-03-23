@@ -1,4 +1,4 @@
-const {Config, Action, bytify, parse} = require("../../shared/serial");
+const {Config, Action, bytify, parse} = require("Shared/serial");
 
 class DataChannel {
 	constructor() {
