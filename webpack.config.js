@@ -52,11 +52,11 @@ module.exports = (env) => [{
 	output: {filename: "server.js"},
 	plugins: process.env.WEBPACK_DEV_SERVER ? [new ServerWebpackPlugin()] : [],
 	resolve: {
-    extensions: [".js", ".json"],
-    alias: {
+		extensions: [".js", ".json"],
+		alias: {
 			Shared: path.resolve(__dirname, "shared/"),
 		},
-  },
+	},
 	mode: env === "prod" ? "production" : "development",
 	devtool: env === "prod" ? "" : "eval-source-map",
 	target: "node",
