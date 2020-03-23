@@ -32,7 +32,7 @@ module.exports = class Game {
 		const now = performance.now();
 		const nextFrameId = this.frameId + 1;
 		const nextFrameTime = this.frameZero + (nextFrameId * physTimeMs);
-		setTimeout(this.stepLoop, nextFrameTime - now);
+		this.timeout = setTimeout(this.stepLoop, nextFrameTime - now);
 
 		// prepare to replay history
 		let frameId = this.oldestUnprocessedAction;
@@ -100,5 +100,8 @@ module.exports = class Game {
 			ship: gameState.ship,
 			debugBoxes: gameState.debugBoxes,
 		};
+	}
+	end() {
+		clearTimeout(this.timeout);
 	}
 };

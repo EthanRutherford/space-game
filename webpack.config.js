@@ -1,13 +1,16 @@
+/* eslint-disable no-process-env */
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const createServer = require("./server/logic/server");
 const path = require("path");
+const ServerWebpackPlugin = require("./tools/server-webpack-plugin");
 
 const port = 9000;
 
-module.exports = (env) => ({
+module.exports = (env) => [{
 	entry: "./src/main.js",
 	output: {filename: "main.js"},
-	plugins: [new MiniCssExtractPlugin({filename: "styles.css"})],
+	plugins: [
+		new MiniCssExtractPlugin({filename: "styles.css"}),
+	],
 	module: {
 		rules: [{
 			test: /\.css$/,
@@ -43,6 +46,18 @@ module.exports = (env) => ({
 		host: "0.0.0.0",
 		port,
 		public: `localhost:${port}`,
-		before: (_, server) => createServer(server),
 	},
-});
+}, {
+	entry: process.env.WEBPACK_DEV_SERVER ? "./server/logic/server.js" : "./server/main.js",
+	output: {filename: "server.js"},
+	plugins: process.env.WEBPACK_DEV_SERVER ? [new ServerWebpackPlugin()] : [],
+	resolve: {
+    extensions: [".js", ".json"],
+    alias: {
+			Shared: path.resolve(__dirname, "shared/"),
+		},
+  },
+	mode: env === "prod" ? "production" : "development",
+	devtool: env === "prod" ? "" : "eval-source-map",
+	target: "node",
+}];
