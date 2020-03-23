@@ -178,4 +178,13 @@ module.exports = function createServer(server = null) {
 			users,
 		}), handleError);
 	});
+
+	wss.on("close", () => {
+		if (game != null) {
+			game.end();
+			game = null;
+		}
+	});
+
+	return wss;
 };

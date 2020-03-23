@@ -6,7 +6,6 @@
   "scripts": {
     "build": "webpack --env prod",
     "watch": "start webpack --watch",
-    "start-server": "start node ./server/main",
     "start": "start webpack-dev-server"
   },
   "author": "",
