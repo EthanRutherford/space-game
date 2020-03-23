@@ -7,9 +7,14 @@ class HelloCompilationPlugin {
 				currentServer.close();
 			}
 
-			// eslint-disable-next-line no-eval
-			const compiled = eval(content.toString());
-			currentServer = compiled.createServer();
+			try {
+				// eslint-disable-next-line no-eval
+				const compiled = eval(content.toString());
+				currentServer = compiled.createServer();
+			} catch (error) {
+				// eslint-disable-next-line no-console
+				console.error(error);
+			}
 		});
 	}
 }
