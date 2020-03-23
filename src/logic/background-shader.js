@@ -1,6 +1,7 @@
-const {shaders: {BackgroundShader}} = require("2d-gl");
+import {shaders} from "2d-gl";
+const {BackgroundShader} = shaders;
 
-class SpaceBgShader extends BackgroundShader {
+export class SpaceBgShader extends BackgroundShader {
 	constructor(gl) {
 		super(gl, `
 			varying highp vec2 vWorld;
@@ -46,5 +47,3 @@ class SpaceBgShader extends BackgroundShader {
 		`);
 	}
 }
-
-module.exports = SpaceBgShader;

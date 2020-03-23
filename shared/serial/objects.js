@@ -1,8 +1,8 @@
-const {Uint8, Uint32} = require("./primitives");
-const BodyState = require("./body-state");
-const {FlightControls} = require("./actions");
+import {Uint8, Uint32} from "./primitives";
+import {BodyState} from "./body-state";
+import {FlightControls} from "./actions";
 
-const Ship = {
+export const Ship = {
 	bytify: (state, ship) => {
 		BodyState.bytify(state, ship.body);
 		Uint8.bytify(state, ship.hp);
@@ -17,7 +17,7 @@ const Ship = {
 	},
 };
 
-const DebugBox = {
+export const DebugBox = {
 	bytify: (state, box) => {
 		BodyState.bytify(state, box.body);
 		Uint8.bytify(state, box.clientId);
@@ -31,5 +31,3 @@ const DebugBox = {
 		};
 	},
 };
-
-module.exports = {Ship, DebugBox};

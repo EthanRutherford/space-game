@@ -1,10 +1,10 @@
-const {useState} = require("react");
-const j = require("react-jenny");
-const {roleNames} = require("Shared/game/roles");
-const AnimatedInput = require("./animated-input");
-const styles = require("../styles/menu");
+import {useState} from "react";
+import j from "react-jenny";
+import {roleNames} from "Shared/game/roles";
+import {AnimatedInput} from "./animated-input";
+import styles from "../styles/menu";
 
-module.exports = function Menu({startGame, userManager}) {
+export function Menu({startGame, userManager}) {
 	const [name, setName] = useState("");
 	userManager.use();
 	const users = Object.values(userManager.otherClients);
@@ -53,4 +53,4 @@ module.exports = function Menu({startGame, userManager}) {
 			]),
 		]),
 	]);
-};
+}

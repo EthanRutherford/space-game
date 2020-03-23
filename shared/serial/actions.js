@@ -1,5 +1,5 @@
-const {Bools, Uint8, Uint32} = require("./primitives");
-const Vector = require("./vector");
+import {Bools, Uint8, Uint32} from "./primitives";
+import {Vector} from "./vector";
 
 const Debug = {
 	bytify: (state, action) => {
@@ -12,7 +12,7 @@ const Debug = {
 	},
 };
 
-const FlightControls = {
+export const FlightControls = {
 	bytify: (state, action) => {
 		Bools.bytify(state, [
 			action.forward,
@@ -41,7 +41,7 @@ const ACTION_MAP = [FlightControlsAction];
 ACTION_MAP[255] = Debug;
 ACTION_MAP.forEach((kind, index) => kind.ID = index);
 
-const Action = {
+export const Action = {
 	bytify: (state, action) => {
 		Uint8.bytify(state, action.type);
 		Uint32.bytify(state, action.frameId);
@@ -59,5 +59,3 @@ const Action = {
 	flightControls: FlightControlsAction.ID,
 	debug: Debug.ID,
 };
-
-module.exports = {FlightControls, Action};

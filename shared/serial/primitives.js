@@ -1,5 +1,5 @@
 // a Bool is a bit of a last-resort, it uses a full 8 bits to transmit a single bit value
-const Bool = {
+export const Bool = {
 	bytify: (state, value) => {
 		state.dataView.setUint8(state.index++, value);
 	},
@@ -9,7 +9,7 @@ const Bool = {
 };
 
 // Bools, in comparison, will pack an array of bits into as few bytes as possible
-const Bools = {
+export const Bools = {
 	bytify: (state, values, count) => {
 		const uint8Count = Math.ceil(count / 8);
 		for (let i = 0; i < uint8Count; i++) {
@@ -43,7 +43,7 @@ const Bools = {
 	},
 };
 
-const Uint8 = {
+export const Uint8 = {
 	bytify: (state, value) => {
 		state.dataView.setUint8(state.index++, value);
 	},
@@ -52,7 +52,7 @@ const Uint8 = {
 	},
 };
 
-const Uint16 = {
+export const Uint16 = {
 	bytify: (state, value) => {
 		state.dataView.setUint16(state.index, value);
 		state.index += 2;
@@ -64,7 +64,7 @@ const Uint16 = {
 	},
 };
 
-const Uint32 = {
+export const Uint32 = {
 	bytify: (state, value) => {
 		state.dataView.setUint32(state.index, value);
 		state.index += 4;
@@ -76,7 +76,7 @@ const Uint32 = {
 	},
 };
 
-const Int8 = {
+export const Int8 = {
 	bytify: (state, value) => {
 		state.dataView.setInt8(state.index++, value);
 	},
@@ -85,7 +85,7 @@ const Int8 = {
 	},
 };
 
-const Int16 = {
+export const Int16 = {
 	bytify: (state, value) => {
 		state.dataView.setInt16(state.index, value);
 		state.index += 2;
@@ -97,7 +97,7 @@ const Int16 = {
 	},
 };
 
-const Int32 = {
+export const Int32 = {
 	bytify: (state, value) => {
 		state.dataView.setInt32(state.index, value);
 		state.index += 4;
@@ -109,7 +109,7 @@ const Int32 = {
 	},
 };
 
-const Float = {
+export const Float = {
 	bytify: (state, value) => {
 		state.dataView.setFloat32(state.index, value);
 		state.index += 4;
@@ -121,7 +121,7 @@ const Float = {
 	},
 };
 
-const Double = {
+export const Double = {
 	bytify: (state, value) => {
 		state.dataView.setFloat64(state.index, value);
 		state.index += 8;
@@ -131,9 +131,4 @@ const Double = {
 		state.index += 8;
 		return result;
 	},
-};
-
-module.exports = {
-	Bool, Bools, Uint8, Uint16, Uint32,
-	Int8, Int16, Int32, Float, Double,
 };

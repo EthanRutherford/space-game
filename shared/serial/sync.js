@@ -1,8 +1,8 @@
-const {Uint32} = require("./primitives");
-const {Ship, DebugBox} = require("./objects");
-const TypedArray = require("./typed-array");
+import {Uint32} from "./primitives";
+import {Ship, DebugBox} from "./objects";
+import {TypedArray} from "./typed-array";
 
-const Sync = {
+export const Sync = {
 	bytify: (state, frameId, sync) => {
 		Uint32.bytify(state, frameId);
 		Ship.bytify(state, sync.ship);
@@ -16,5 +16,3 @@ const Sync = {
 		};
 	},
 };
-
-module.exports = Sync;

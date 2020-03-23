@@ -1,9 +1,8 @@
-const {ImageLoader} = require("2d-gl");
-const shipUrl = require("../images/ship.png");
+import {ImageLoader} from "2d-gl";
+import shipUrl from "../images/ship.png";
 
-const loader = new ImageLoader();
+export const spriteLoader = new ImageLoader();
 
 // preload sprites
-loader.get("ship", shipUrl);
+spriteLoader.get("ship", shipUrl);
 
-module.exports = loader;

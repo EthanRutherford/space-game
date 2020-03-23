@@ -1,6 +1,6 @@
-const {Double} = require("./primitives");
+import {Double} from "./primitives";
 
-const Timing = {
+export const Timing = {
 	bytify: (state, time) => {
 		Double.bytify(state, time);
 	},
@@ -10,5 +10,3 @@ const Timing = {
 		};
 	},
 };
-
-module.exports = Timing;

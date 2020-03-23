@@ -1,7 +1,7 @@
-const {useState, forwardRef} = require("react");
-const j = require("react-jenny");
+import {useState, forwardRef} from "react";
+import j from "react-jenny";
 
-function AnimatedInput({
+export const AnimatedInput = forwardRef(function AnimatedInput({
 	className,
 	hoverClass,
 	activeClass,
@@ -33,6 +33,4 @@ function AnimatedInput({
 		ref,
 		...rest,
 	}});
-}
-
-module.exports = forwardRef(AnimatedInput);
+});

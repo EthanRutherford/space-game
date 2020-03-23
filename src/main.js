@@ -1,12 +1,12 @@
-const {render} = require("react-dom");
-const {useState, useMemo} = require("react");
-const j = require("react-jenny");
-const {Config} = require("Shared/serial");
-const UserManager = require("./logic/user-manager");
-const Menu = require("./ui/menu");
-const Game = require("./ui/game");
-require("./styles/reset");
-require("./styles/root");
+import {render} from "react-dom";
+import {useState, useMemo} from "react";
+import j from "react-jenny";
+import {Config} from "Shared/serial";
+import {UserManager} from "./logic/user-manager";
+import {Menu} from "./ui/menu";
+import {GameUi} from "./ui/game";
+import "./styles/reset";
+import "./styles/root";
 
 function App() {
 	const [page, setPage] = useState("menu");
@@ -25,7 +25,7 @@ function App() {
 	}
 
 	if (page === "game") {
-		return j([Game, userManager]);
+		return j([GameUi, userManager]);
 	}
 
 	return Error("bad");

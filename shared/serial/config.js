@@ -1,6 +1,6 @@
-const {Uint8} = require("./primitives");
-const TypedArray = require("./typed-array");
-const Text = require("./text");
+import {Uint8} from "./primitives";
+import {TypedArray} from "./typed-array";
+import {Text} from "./text";
 
 const User = {
 	bytify: (state, user) => {
@@ -73,7 +73,7 @@ const Start = {bytify: () => {}, parse: () => {}};
 const CONFIG_MAP = [Init, Name, Role, NewUser, UserDced, Start];
 CONFIG_MAP.forEach((kind, index) => kind.ID = index);
 
-const Config = {
+export const Config = {
 	bytify: (state, config) => {
 		Uint8.bytify(state, config.type);
 		CONFIG_MAP[config.type].bytify(state, config);
@@ -90,5 +90,3 @@ const Config = {
 	userDced: UserDced.ID,
 	start: Start.ID,
 };
-
-module.exports = Config;

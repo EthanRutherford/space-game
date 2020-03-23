@@ -1,11 +1,12 @@
-const {useRef, useMemo, useEffect} = require("react");
-const j = require("react-jenny");
-const {Math: {Vector2D}} = require("boxjs");
-const {roleIds} = require("Shared/game/roles");
-const {Timing, Action, Sync} = require("Shared/serial");
-const Game = require("../logic/game");
+import {useRef, useMemo, useEffect} from "react";
+import j from "react-jenny";
+import {Math as VectorMath} from "boxjs";
+import {roleIds} from "Shared/game/roles";
+import {Timing, Action, Sync} from "Shared/serial";
+import {Game} from "../logic/game";
+const {Vector2D} = VectorMath;
 
-module.exports = function GameUi(props) {
+export function GameUi(props) {
 	const canvas = useRef();
 	const game = useRef();
 	const controls = useMemo(() => ({}), []);
@@ -126,4 +127,4 @@ module.exports = function GameUi(props) {
 		onWheel: wheel,
 		ref: canvas,
 	}});
-};
+}

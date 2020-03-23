@@ -1,6 +1,6 @@
-const {Uint16} = require("./primitives");
+import {Uint16} from "./primitives";
 
-const TypedArray = {
+export const TypedArray = {
 	bytify: (state, type, array) => {
 		Uint16.bytify(state, array.length);
 		for (const value of array) {
@@ -16,5 +16,3 @@ const TypedArray = {
 		return array;
 	},
 };
-
-module.exports = TypedArray;

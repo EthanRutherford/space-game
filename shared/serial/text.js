@@ -1,6 +1,6 @@
-const {Uint16} = require("./primitives");
+import {Uint16} from "./primitives";
 
-const Text = {
+export const Text = {
 	bytify: (state, value) => {
 		Uint16.bytify(state, value.length);
 		for (let i = 0; i < value.length; i++) {
@@ -18,5 +18,3 @@ const Text = {
 		return result;
 	},
 };
-
-module.exports = Text;

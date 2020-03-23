@@ -1,15 +1,8 @@
-const {performance} = require("perf_hooks");
-const WebSocket = require("ws");
-const {roleIds} = require("Shared/game/roles");
-const {
-	Config,
-	Sync,
-	Timing,
-	Action,
-	bytify,
-	parse,
-} = require("Shared/serial");
-const Game = require("./game");
+import {performance} from "perf_hooks";
+import WebSocket from "ws";
+import {roleIds} from "Shared/game/roles";
+import {Config, Sync, Timing, Action, bytify, parse} from "Shared/serial";
+import {Game} from "./game";
 
 // eslint-disable-next-line no-console
 const handleError = (error) => error && console.error(error);
@@ -93,7 +86,7 @@ function initGame(wss) {
 	return game;
 }
 
-module.exports = function createServer(server = null) {
+export function createServer(server = null) {
 	let game = null;
 	const idStack = new Array(256).fill(0).map((_, i) => i).reverse();
 	const wss = new WebSocket.Server({server, port: 12345});
@@ -187,4 +180,4 @@ module.exports = function createServer(server = null) {
 	});
 
 	return wss;
-};
+}

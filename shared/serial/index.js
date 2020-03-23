@@ -1,8 +1,8 @@
-const {Uint8} = require("./primitives");
-const Config = require("./config");
-const Sync = require("./sync");
-const Timing = require("./timing");
-const {Action} = require("./actions");
+import {Uint8} from "./primitives";
+import {Config} from "./config";
+import {Sync} from "./sync";
+import {Timing} from "./timing";
+import {Action} from "./actions";
 const KIND_MAP = [Config, Sync, Timing, Action];
 KIND_MAP.forEach((kind, index) => kind.ID = index);
 
@@ -17,7 +17,9 @@ KIND_MAP.forEach((kind, index) => kind.ID = index);
 const byteBuffer = new Uint8Array(2 ** 20);
 const bufferView = new DataView(byteBuffer.buffer);
 
-function bytify(type, ...args) {
+export {Config, Sync, Timing, Action};
+
+export function bytify(type, ...args) {
 	const state = {
 		dataView: bufferView,
 		index: 0,
@@ -32,7 +34,7 @@ function bytify(type, ...args) {
 	return byteBuffer.subarray(0, state.index);
 }
 
-function parse(buffer) {
+export function parse(buffer) {
 	const state = {
 		dataView: new DataView(buffer),
 		index: 0,
@@ -44,12 +46,3 @@ function parse(buffer) {
 	// return deserialized message
 	return {type, data: type.parse(state)};
 }
-
-module.exports = {
-	Config,
-	Sync,
-	Timing,
-	Action,
-	bytify,
-	parse,
-};

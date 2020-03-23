@@ -1,6 +1,6 @@
-const {Config, Action, bytify, parse} = require("Shared/serial");
+import {Config, Action, bytify, parse} from "Shared/serial";
 
-class DataChannel {
+export class DataChannel {
 	constructor() {
 		this.closed = false;
 		this.websocket = null;
@@ -48,5 +48,3 @@ class DataChannel {
 		this.listeners.delete(listener);
 	}
 }
-
-module.exports = DataChannel;

@@ -1,33 +1,18 @@
-const {
-	Renderer,
-	Scene,
-	rgba,
-	builtIn: {
-		Shape,
-		OrthoCamera,
-		VectorMaterial,
-		SpriteMaterial,
-	},
-	shaders: {
-		MotionBlur,
-	},
-} = require("2d-gl");
-const {
-	fork,
-	Math: {cleanAngle},
-	Solver,
-	AABB,
-} = require("boxjs");
-const {physTime, physTimeMs} = require("Shared/game/constants");
-const GameState = require("Shared/game/game-state");
-const {flyShip} = require("Shared/game/actions");
-const {Ship, DebugBox} = require("Shared/game/objects");
-const {Action} = require("Shared/serial");
-const BgShader = require("../logic/background-shader");
-const {vLerp, aLerp} = require("../logic/util");
-const spriteLoader = require("./sprites");
+import {Renderer, Scene, rgba, builtIn, shaders} from "2d-gl";
+import {fork, Math as VectorMath, Solver, AABB} from "boxjs";
+import {physTime, physTimeMs} from "Shared/game/constants";
+import {GameState} from "Shared/game/game-state";
+import {flyShip} from "Shared/game/actions";
+import {Ship, DebugBox} from "Shared/game/objects";
+import {Action} from "Shared/serial";
+import {SpaceBgShader} from "../logic/background-shader";
+import {vLerp, aLerp} from "../logic/util";
+import {spriteLoader} from "./sprites";
+const {Shape, OrthoCamera, VectorMaterial, SpriteMaterial} = builtIn;
+const {MotionBlur} = shaders;
+const {cleanAngle} = VectorMath;
 
-module.exports = class Game {
+export class Game {
 	constructor(canvas, userId) {
 		this.userId = userId;
 
@@ -46,7 +31,7 @@ module.exports = class Game {
 
 		// add shaders
 		const blurShader = this.renderer.createShader(MotionBlur);
-		const bgShader = this.renderer.createShader(BgShader);
+		const bgShader = this.renderer.createShader(SpaceBgShader);
 		this.scene.addPostProcShader(blurShader);
 		this.scene.setBackgroundShader(bgShader);
 
@@ -409,4 +394,4 @@ module.exports = class Game {
 	getGameState() {
 		return this.frameBuffer[0];
 	}
-};
+}

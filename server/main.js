@@ -1,2 +1,2 @@
-const createServer = require("./logic/server");
+import {createServer} from "./logic/server";
 createServer();

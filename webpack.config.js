@@ -25,10 +25,7 @@ module.exports = (env) => [{
 		}, {
 			test: /.png$/,
 			use: [
-				{loader: "file-loader", options: {
-					publicPath: "/dist",
-					esModule: false,
-				}},
+				{loader: "file-loader", options: {publicPath: "/dist"}},
 			],
 		}],
 	},

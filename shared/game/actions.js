@@ -1,6 +1,7 @@
-const {Math: {Vector2D, clamp}} = require("boxjs");
+import {Math as VectorMath} from "boxjs";
+const {Vector2D, clamp} = VectorMath;
 
-function flyShip(shipBody, controls) {
+export function flyShip(shipBody, controls) {
 	// add thrust from engines
 	const v = new Vector2D(0, 0);
 	if (controls.forward) {
@@ -32,5 +33,3 @@ function flyShip(shipBody, controls) {
 		shipBody.velocity.mul(100);
 	}
 }
-
-module.exports = {flyShip};

@@ -1,7 +1,7 @@
-const {Uint32, Float} = require("./primitives");
-const Vector = require("./vector");
+import {Uint32, Float} from "./primitives";
+import {Vector} from "./vector";
 
-const BodyState = {
+export const BodyState = {
 	bytify: (state, value) => {
 		Uint32.bytify(state, value.id);
 		Vector.bytify(state, value.position);
@@ -19,5 +19,3 @@ const BodyState = {
 		};
 	},
 };
-
-module.exports = BodyState;

@@ -1,12 +1,12 @@
-const {performance} = require("perf_hooks");
-const {Solver} = require("boxjs");
-const {physTime, physTimeMs} = require("Shared/game/constants");
-const GameState = require("Shared/game/game-state");
-const {flyShip} = require("Shared/game/actions");
-const {Ship, DebugBox} = require("Shared/game/objects");
-const {Action} = require("Shared/serial");
+import {performance} from "perf_hooks";
+import {Solver} from "boxjs";
+import {physTime, physTimeMs} from "Shared/game/constants";
+import {GameState} from "Shared/game/game-state";
+import {flyShip} from "Shared/game/actions";
+import {Ship, DebugBox} from "Shared/game/objects";
+import {Action} from "Shared/serial";
 
-module.exports = class Game {
+export class Game {
 	constructor() {
 		const solver = new Solver();
 		const shipBody = Ship.createBody();
@@ -104,4 +104,4 @@ module.exports = class Game {
 	end() {
 		clearTimeout(this.timeout);
 	}
-};
+}

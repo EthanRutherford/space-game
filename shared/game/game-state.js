@@ -1,7 +1,7 @@
-const {fork} = require("boxjs");
-const {Ship, DebugBox} = require("./objects");
+import {fork} from "boxjs";
+import {Ship, DebugBox} from "./objects";
 
-class GameState {
+export class GameState {
 	constructor(solver, ship, debugBoxes = []) {
 		this.solver = solver;
 		this.ship = ship;
@@ -17,5 +17,3 @@ class GameState {
 		return new GameState(newSolver, newShip, newBoxes);
 	}
 }
-
-module.exports = GameState;

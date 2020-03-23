@@ -1,7 +1,8 @@
-const {Math: {Vector2D}} = require("boxjs");
-const {Float} = require("./primitives");
+import {Math as VectorMath} from "boxjs";
+import {Float} from "./primitives";
+const {Vector2D} = VectorMath;
 
-const Vector = {
+export const Vector = {
 	bytify: (state, vector) => {
 		Float.bytify(state, vector.x);
 		Float.bytify(state, vector.y);
@@ -10,5 +11,3 @@ const Vector = {
 		return new Vector2D(Float.parse(state), Float.parse(state));
 	},
 };
-
-module.exports = Vector;

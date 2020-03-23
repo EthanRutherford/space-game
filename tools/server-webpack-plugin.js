@@ -8,8 +8,8 @@ class HelloCompilationPlugin {
 			}
 
 			// eslint-disable-next-line no-eval
-			const createServer = eval(content.toString());
-			currentServer = createServer();
+			const compiled = eval(content.toString());
+			currentServer = compiled.createServer();
 		});
 	}
 }

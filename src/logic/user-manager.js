@@ -1,8 +1,8 @@
-const {useState, useEffect} = require("react");
-const DataChannel = require("./data-channel");
-const {Config} = require("Shared/serial");
+import {useState, useEffect} from "react";
+import {DataChannel} from "./data-channel";
+import {Config} from "Shared/serial";
 
-module.exports = class UserManager {
+export class UserManager {
 	constructor() {
 		this.channel = new DataChannel();
 		this.userId = null;
@@ -81,4 +81,4 @@ module.exports = class UserManager {
 			return () => this.updaters.delete(update);
 		}, []);
 	}
-};
+}
