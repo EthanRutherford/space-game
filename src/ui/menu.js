@@ -1,6 +1,6 @@
 const {useState} = require("react");
 const j = require("react-jenny");
-const {roleNames} = require("../../shared/game/roles");
+const {roleNames} = require("Shared/game/roles");
 const AnimatedInput = require("./animated-input");
 const styles = require("../styles/menu");
 

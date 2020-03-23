@@ -1,8 +1,8 @@
 const {useRef, useMemo, useEffect} = require("react");
 const j = require("react-jenny");
 const {Math: {Vector2D}} = require("boxjs");
-const {roleIds} = require("../../shared/game/roles");
-const {Timing, Action, Sync} = require("../../shared/serial");
+const {roleIds} = require("Shared/game/roles");
+const {Timing, Action, Sync} = require("Shared/serial");
 const Game = require("../logic/game");
 
 module.exports = function GameUi(props) {
