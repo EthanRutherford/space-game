@@ -1,6 +1,6 @@
 let currentServer = null;
 
-class HelloCompilationPlugin {
+class ServerPlugin {
 	apply(compiler) {
 		compiler.hooks.assetEmitted.tap("ServerPlugin", (_, content) => {
 			if (currentServer != null) {
@@ -19,4 +19,4 @@ class HelloCompilationPlugin {
 	}
 }
 
-module.exports = HelloCompilationPlugin;
+module.exports = ServerPlugin;
