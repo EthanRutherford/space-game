@@ -67,7 +67,7 @@ function initGameClient(game, ws) {
 	// add handler for game messages
 	ws.handleGameMessage = function(message) {
 		if (message.type === Action) {
-			game.addAction(message.data, ws.id);
+			game.addAction(message.data, ws.userId);
 		}
 	};
 }
