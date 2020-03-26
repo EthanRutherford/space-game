@@ -214,6 +214,10 @@ export class Game {
 		// just skip ahead if we've fallen behind
 		if (currentFrameId !== this.frameId) {
 			this.frameId = currentFrameId;
+			// since we're skipping ahead, the framebuffer is now invalid.
+			// just fill the buffer with our latest frame and let sync catch us up.
+			this.frameBuffer.fill(this.frameBuffer[0]);
+			this.actionBuffer.fill([]);
 		}
 
 		// adjust framezero if we're recieving syncs from the future
@@ -290,7 +294,6 @@ export class Game {
 		// offset by the transmission time.
 		// We use this to sync up local game time with the server.
 		this.frameZero = performance.now() - time;
-		this.frameId = Math.floor(time / physTimeMs) + 1;
 	}
 	updateSync(sync) {
 		this.latestSync = sync;
