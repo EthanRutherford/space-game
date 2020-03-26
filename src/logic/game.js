@@ -138,7 +138,7 @@ export class Game {
 		const updates = [];
 
 		gameState.ship.hp = this.latestSync.ship.hp;
-		gameState.ship.controls = this.latestSync.ship.controls;
+		Object.assign(gameState.ship.controls, this.latestSync.ship.controls);
 		if (this.idMap[this.latestSync.ship.body.id] == null) {
 			const body = Ship.createBody(this.latestSync.ship.body);
 			const renderable = makeShipRenderable(this.renderer, () => this.getGameState().ship);
@@ -238,12 +238,14 @@ export class Game {
 			const index = this.frameId - frameId;
 
 			for (const action of this.actionBuffer[index]) {
-				if (action.type === Action.debug) {
+				if (action.type === Action.flightControls) {
+					Object.assign(gameState.ship.controls, action);
+				} else if (action.type === Action.gunControls) {
+					gameState.ship.controls.aim.set(action);
+				} else if (action.type === Action.debug) {
 					if (gameState.solver.bodyMap[action.body.id] == null) {
 						gameState.solver.addBody(fork.cloneBody(action.body));
 					}
-				} else if (action.type === Action.flightControls) {
-					gameState.ship.controls = action;
 				}
 			}
 

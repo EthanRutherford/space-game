@@ -3,7 +3,7 @@ const {Vector2D} = VectorMath;
 const {Polygon} = Shapes;
 
 export class Ship {
-	constructor(body, hp = 100, controls = {}) {
+	constructor(body, hp = 100, controls = {aim: new Vector2D(0, 2)}) {
 		this.body = body;
 		this.hp = hp;
 		this.controls = controls;

@@ -27,6 +27,7 @@ export function GameUi(props) {
 		// add global listeners
 		window.addEventListener("keydown", keyDown);
 		window.addEventListener("keyup", keyUp);
+		window.addEventListener("mousemove", mouseMove);
 	}, []);
 
 	function postSolve(frameId) {
@@ -39,6 +40,22 @@ export function GameUi(props) {
 
 			game.current.addAction(action);
 			props.channel.sendAction(action);
+		} else if (props.role === roleIds.gunner && controls.aim) {
+			const aim = Vector2D.clone(game.current.renderer.viewportToWorld(
+				controls.aim.x,
+				controls.aim.y,
+				game.current.camera,
+			)).sub(game.current.camera);
+
+			const action = {
+				type: Action.gunControls,
+				frameId,
+				...aim,
+			};
+
+			game.current.addAction(action);
+			props.channel.sendAction(action);
+			controls.aim = null;
 		}
 	}
 
@@ -118,6 +135,15 @@ export function GameUi(props) {
 			} else if (event.key === "d") {
 				controls.right = false;
 			}
+		}
+	}
+
+	function mouseMove(event) {
+		if (props.role === roleIds.gunner) {
+			controls.aim = {
+				x: event.clientX,
+				y: event.clientY,
+			};
 		}
 	}
 

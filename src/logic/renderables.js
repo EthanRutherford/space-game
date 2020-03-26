@@ -1,7 +1,9 @@
 import {ImageLoader, rgba, builtIn} from "2d-gl";
+import {Math as VectorMath} from "boxjs";
 import shipUrl from "../images/ship.png";
 import gunUrl from "../images/gun.png";
 const {Shape, VectorMaterial, SpriteMaterial} = builtIn;
+const {Vector2D} = VectorMath;
 
 const spriteLoader = new ImageLoader();
 
@@ -80,7 +82,12 @@ function makeGunRenderable(renderer, x, y, r) {
 	gun.y = y;
 	gun.r = r;
 
-	gun.update = () => {};
+	gun.update = (ship, aim) => {
+		const c = Math.cos(-ship.r);
+		const s = Math.sin(-ship.r);
+		const vector = new Vector2D(c * aim.x - s * aim.y, s * aim.x + c * aim.y).sub(gun);
+		gun.r = Math.atan2(-vector.x, vector.y);
+	};
 
 	return gun;
 }
@@ -108,11 +115,12 @@ export function makeShipRenderable(renderer, getCurrentShip) {
 	];
 
 	ship.update = () => {
+		const currentShip = getCurrentShip();
 		for (const exhaust of exhausts) {
 			exhaust.update();
 		}
 		for (const gun of guns) {
-			gun.update();
+			gun.update(ship, currentShip.controls.aim);
 		}
 	};
 	ship.getChildren = () => {

@@ -43,14 +43,16 @@ export class Game {
 			const index = this.frameId - frameId;
 
 			for (const action of this.actionBuffer[index]) {
-				if (action.type === Action.debug) {
+				if (action.type === Action.flightControls) {
+					Object.assign(gameState.ship.controls, action);
+				} else if (action.type === Action.gunControls) {
+					gameState.ship.controls.aim.set(action);
+				} else if (action.type === Action.debug) {
 					if (gameState.solver.bodyMap[action.body.id] == null) {
 						const debugBox = new DebugBox(action.body, action.clientId, frameId);
 						gameState.debugBoxes.push(debugBox);
 						gameState.solver.addBody(debugBox.body);
 					}
-				} else if (action.type === Action.flightControls) {
-					gameState.ship.controls = action;
 				}
 			}
 

@@ -37,7 +37,21 @@ const FlightControlsAction = {
 	parse: (state, action) => Object.assign(action, FlightControls.parse(state)),
 };
 
-const ACTION_MAP = [FlightControlsAction];
+export const GunControls = {
+	bytify: (state, action) => {
+		Vector.bytify(state, action);
+	},
+	parse: (state) => {
+		return Vector.parse(state);
+	},
+};
+
+const GunControlsAction = {
+	bytify: GunControls.bytify,
+	parse: (state, action) => Object.assign(action, GunControls.parse(state)),
+};
+
+const ACTION_MAP = [FlightControlsAction, GunControlsAction];
 ACTION_MAP[255] = Debug;
 ACTION_MAP.forEach((kind, index) => kind.ID = index);
 
@@ -57,5 +71,6 @@ export const Action = {
 		return action;
 	},
 	flightControls: FlightControlsAction.ID,
+	gunControls: GunControlsAction.ID,
 	debug: Debug.ID,
 };

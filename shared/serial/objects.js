@@ -1,18 +1,22 @@
 import {Uint8, Uint32} from "./primitives";
 import {BodyState} from "./body-state";
-import {FlightControls} from "./actions";
+import {FlightControls, GunControls} from "./actions";
 
 export const Ship = {
 	bytify: (state, ship) => {
 		BodyState.bytify(state, ship.body);
 		Uint8.bytify(state, ship.hp);
 		FlightControls.bytify(state, ship.controls);
+		GunControls.bytify(state, ship.controls.aim);
 	},
 	parse: (state) => {
 		return {
 			body: BodyState.parse(state),
 			hp: Uint8.parse(state),
-			controls: FlightControls.parse(state),
+			controls: {
+				...FlightControls.parse(state),
+				aim: GunControls.parse(state),
+			},
 		};
 	},
 };
