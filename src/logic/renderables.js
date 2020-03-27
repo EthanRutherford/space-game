@@ -82,10 +82,13 @@ function makeGunRenderable(renderer, x, y, r) {
 	gun.y = y;
 	gun.r = r;
 
-	gun.update = (ship, aim) => {
+	gun.update = (ship, offset, aim) => {
 		const c = Math.cos(-ship.r);
 		const s = Math.sin(-ship.r);
-		const vector = new Vector2D(c * aim.x - s * aim.y, s * aim.x + c * aim.y).sub(gun);
+		const vector = new Vector2D(
+			c * aim.x - s * aim.y,
+			s * aim.x + c * aim.y,
+		).add(offset).sub(gun);
 		gun.r = Math.atan2(-vector.x, vector.y);
 	};
 
@@ -120,7 +123,8 @@ export function makeShipRenderable(renderer, getCurrentShip) {
 			exhaust.update();
 		}
 		for (const gun of guns) {
-			gun.update(ship, currentShip.controls.aim);
+			const offset = currentShip.body.mass.center;
+			gun.update(ship, offset, currentShip.controls.aim);
 		}
 	};
 	ship.getChildren = () => {
