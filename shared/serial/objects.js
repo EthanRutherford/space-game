@@ -1,4 +1,4 @@
-import {Uint8, Uint32} from "./primitives";
+import {Uint8, Uint32, Float} from "./primitives";
 import {BodyState} from "./body-state";
 import {FlightControls, GunControls} from "./actions";
 
@@ -17,6 +17,19 @@ export const Ship = {
 				...FlightControls.parse(state),
 				aim: GunControls.parse(state),
 			},
+		};
+	},
+};
+
+export const Asteroid = {
+	bytify: (state, asteroid) => {
+		BodyState.bytify(state, asteroid.body);
+		Float.bytify(state, asteroid.radius);
+	},
+	parse: (state) => {
+		return {
+			body: BodyState.parse(state),
+			radius: Float.parse(state),
 		};
 	},
 };

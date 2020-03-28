@@ -1,6 +1,6 @@
 import {Math as VectorMath, Body, Shapes} from "boxjs";
 const {Vector2D} = VectorMath;
-const {Polygon} = Shapes;
+const {Polygon, Circle} = Shapes;
 
 export class Ship {
 	constructor(body, hp = 100, controls = {aim: new Vector2D(0, 2)}) {
@@ -23,6 +23,20 @@ Ship.createBody = ({position, angle, velocity, angularVelocity} = {}) => {
 			new Vector2D(.0625, .9375),
 			new Vector2D(-.0625, .9375),
 		])],
+	});
+};
+
+export class Asteroid {
+	constructor(body, radius) {
+		this.body = body;
+		this.radius = radius;
+	}
+}
+Asteroid.createBody = ({position, angle, velocity, angularVelocity} = {}, radius = 1) => {
+	return new Body({
+		position, angle,
+		velocity, angularVelocity,
+		shapes: [new Circle(radius)],
 	});
 };
 

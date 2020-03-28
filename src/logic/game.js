@@ -3,11 +3,11 @@ import {fork, Math as VectorMath, Solver, AABB} from "boxjs";
 import {physTime, physTimeMs} from "Shared/game/constants";
 import {GameState} from "Shared/game/game-state";
 import {flyShip} from "Shared/game/actions";
-import {Ship, DebugBox} from "Shared/game/objects";
+import {Ship, Asteroid, DebugBox} from "Shared/game/objects";
 import {Action} from "Shared/serial";
 import {SpaceBgShader} from "../logic/background-shader";
 import {vLerp, aLerp} from "../logic/util";
-import {makeShipRenderable, makeDebugBoxRenderable} from "./renderables";
+import {makeShipRenderable, makeDebugBoxRenderable, makeAsteroidRenderable} from "./renderables";
 const {OrthoCamera} = builtIn;
 const {MotionBlur} = shaders;
 const {cleanAngle} = VectorMath;
@@ -146,6 +146,16 @@ export class Game {
 			gameState.ship.body = body;
 		} else {
 			updates.push(this.latestSync.ship.body);
+		}
+
+		for (const asteroid of this.latestSync.asteroids) {
+			if (this.idMap[asteroid.body.id] == null) {
+				const body = Asteroid.createBody(asteroid.body, asteroid.radius);
+				const renderable = makeAsteroidRenderable(this.renderer, asteroid.radius);
+				this.addBody(gameState, asteroid.body.id, body, renderable);
+			} else {
+				updates.push(asteroid.body);
+			}
 		}
 
 		for (const debugBox of this.latestSync.debugBoxes) {

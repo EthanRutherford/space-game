@@ -3,6 +3,7 @@ import {Math as VectorMath} from "boxjs";
 import earcut from "earcut";
 import shipUrl from "../images/ship.png";
 import gunUrl from "../images/gun.png";
+import asteroidUrl from "../images/asteroid.png";
 const {Shape, VectorMaterial, SpriteMaterial} = builtIn;
 const {Vector2D} = VectorMath;
 
@@ -13,6 +14,7 @@ const sprites = {};
 const getSprite = (name, url) => spriteLoader.get(name, url).then((x) => sprites[name] = x);
 getSprite("ship", shipUrl);
 getSprite("gun", gunUrl);
+getSprite("asteroid", asteroidUrl);
 
 function getAlphas(bitmap) {
 	const canvas = document.createElement("canvas");
@@ -100,8 +102,8 @@ function getShape(bitmap, cx, cy, drawWidth, drawHeight) {
 	const height = drawHeight / bitmap.height;
 
 	const tris = earcut(verts.flatMap((v) => [v.x, v.y]));
-	const mVerts = verts.map((v) => ({x: (v.x - cx) * width, y: (cy - v.y) * height}));
-	const mCoords = verts.map((v) => ({x: v.x / bitmap.width, y: v.y / bitmap.height}));
+	const mVerts = verts.map((v) => new Vector2D((v.x - cx) * width, (cy - v.y) * height));
+	const mCoords = verts.map((v) => new Vector2D(v.x / bitmap.width, v.y / bitmap.height));
 
 	return {
 		verts: tris.map((i) => mVerts[i]),
@@ -119,29 +121,30 @@ function singleton(create) {
 	return (...args) => func(...args);
 }
 
-const getExhaustMaterial = singleton(() => new VectorMaterial([
-	rgba(.1, .2, 1),
-	rgba(.8, 0, .2),
-	rgba(.8, .6, 0),
-	rgba(.8, 0, .2),
-]));
-function makeExhaustRenderable(renderer, x, y, r) {
-	const verts = [
+const getExhaustComponents = singleton(() => ({
+	exhaustVerts: [
 		{x: 0, y: 0},
 		{x: -.1, y: -.1},
 		{x: 0, y: -1},
 		{x: .1, y: -.1},
-	];
-
-	const exhaustShape = new Shape(verts);
-	const exhaustMaterial = getExhaustMaterial();
+	],
+	exhaustMaterial: new VectorMaterial([
+		rgba(.1, .2, 1),
+		rgba(.8, 0, .2),
+		rgba(.8, .6, 0),
+		rgba(.8, 0, .2),
+	]),
+}));
+function makeExhaustRenderable(renderer, x, y, r) {
+	const {exhaustVerts, exhaustMaterial} = getExhaustComponents();
+	const exhaustShape = new Shape(exhaustVerts);
 	const exhaust = renderer.getInstance(exhaustShape, exhaustMaterial);
 	exhaust.x = x;
 	exhaust.y = y;
 	exhaust.r = r;
 
 	exhaust.update = () => {
-		const newVerts = verts.map((v) => ({...v}));
+		const newVerts = exhaustVerts.map((v) => ({...v}));
 		newVerts[2].x += (Math.floor(Math.random() * 3) - 1) * .02;
 		newVerts[2].y += (Math.floor(Math.random() * 3) - 1) * .02;
 		exhaustShape.update(newVerts);
@@ -213,6 +216,21 @@ export function makeShipRenderable(renderer, getCurrentShip) {
 	};
 
 	return ship;
+}
+
+const getAsteroidComponents = singleton(() => {
+	const {verts, tcoords} = getShape(sprites.asteroid, 16, 16, 2, 2);
+
+	return {
+		asteroidVerts: verts,
+		asteroidMaterial: new SpriteMaterial(tcoords, sprites.asteroid, false),
+	};
+});
+export function makeAsteroidRenderable(renderer, radius) {
+	const {asteroidVerts, asteroidMaterial} = getAsteroidComponents();
+	const mappedVerts = asteroidVerts.map((v) => v.times(radius));
+	const asteroidShape = new Shape(mappedVerts);
+	return renderer.getInstance(asteroidShape, asteroidMaterial);
 }
 
 const getDebugBoxComponents = singleton(() => {

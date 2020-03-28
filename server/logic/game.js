@@ -1,10 +1,11 @@
 import {performance} from "perf_hooks";
-import {Solver} from "boxjs";
+import {Solver, Math as VectorMath} from "boxjs";
 import {physTime, physTimeMs} from "Shared/game/constants";
 import {GameState} from "Shared/game/game-state";
 import {flyShip} from "Shared/game/actions";
-import {Ship, DebugBox} from "Shared/game/objects";
+import {Ship, Asteroid, DebugBox} from "Shared/game/objects";
 import {Action} from "Shared/serial";
+const {Vector2D} = VectorMath;
 
 export class Game {
 	constructor() {
@@ -13,7 +14,20 @@ export class Game {
 		const ship = new Ship(shipBody);
 		solver.addBody(shipBody);
 
-		const frame0 = new GameState(solver, ship);
+		const asteroids = [];
+		for (let i = 0; i < 100; i++) {
+			const position = new Vector2D(
+				Math.random() * 500 - 250,
+				Math.random() * 500 - 250,
+			);
+			const angularVelocity = Math.random() * .2 - .1;
+			const radius = Math.random() * 2 + 1;
+			const astBody = Asteroid.createBody({position, angularVelocity}, radius);
+			asteroids.push(new Asteroid(astBody, radius));
+			solver.addBody(astBody);
+		}
+
+		const frame0 = new GameState(solver, ship, asteroids);
 		this.frameBuffer = [frame0, null, null, null, null];
 		this.actionBuffer = [[], null, null, null, null];
 		this.oldestUnprocessedAction = 0;
@@ -100,6 +114,7 @@ export class Game {
 		const gameState = this.frameBuffer[0];
 		return {
 			ship: gameState.ship,
+			asteroids: gameState.asteroids,
 			debugBoxes: gameState.debugBoxes,
 		};
 	}
