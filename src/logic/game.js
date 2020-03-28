@@ -222,7 +222,7 @@ export class Game {
 
 		// adjust framezero if we're recieving syncs from the future
 		if (this.latestSync && this.latestSync.frameId > this.frameId) {
-			this.frameZero -= this.latestSync.frameId - this.frameId * physTimeMs;
+			this.frameZero -= (this.latestSync.frameId - this.frameId) * physTimeMs;
 			this.frameId = this.latestSync.frameId;
 		}
 
