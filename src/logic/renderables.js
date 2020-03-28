@@ -120,17 +120,17 @@ function singleton(create) {
 }
 
 const getExhaustMaterial = singleton(() => new VectorMaterial([
-	rgba(.1, .2, 1, 1),
-	rgba(.8, 0, .2, 1),
-	rgba(.8, .6, 0, 1),
-	rgba(.8, 0, .2, 1),
+	rgba(.1, .2, 1),
+	rgba(.8, 0, .2),
+	rgba(.8, .6, 0),
+	rgba(.8, 0, .2),
 ]));
 function makeExhaustRenderable(renderer, x, y, r) {
 	const verts = [
 		{x: 0, y: 0},
-		{x: -.05, y: -.05},
-		{x: 0, y: -.5},
-		{x: .05, y: -.05},
+		{x: -.1, y: -.1},
+		{x: 0, y: -1},
+		{x: .1, y: -.1},
 	];
 
 	const exhaustShape = new Shape(verts);
@@ -142,8 +142,8 @@ function makeExhaustRenderable(renderer, x, y, r) {
 
 	exhaust.update = () => {
 		const newVerts = verts.map((v) => ({...v}));
-		newVerts[2].x += (Math.floor(Math.random() * 3) - 1) * .01;
-		newVerts[2].y += (Math.floor(Math.random() * 3) - 1) * .01;
+		newVerts[2].x += (Math.floor(Math.random() * 3) - 1) * .02;
+		newVerts[2].y += (Math.floor(Math.random() * 3) - 1) * .02;
 		exhaustShape.update(newVerts);
 	};
 
@@ -151,7 +151,7 @@ function makeExhaustRenderable(renderer, x, y, r) {
 }
 
 const getGunComponents = singleton(() => {
-	const {verts, tcoords} = getShape(sprites.gun, 8, 12, .25, .25);
+	const {verts, tcoords} = getShape(sprites.gun, 8, 12, .5, .5);
 
 	return {
 		gunShape: new Shape(verts, Shape.triangles),
@@ -179,7 +179,7 @@ function makeGunRenderable(renderer, x, y, r) {
 }
 
 const getShipComponents = singleton(() => {
-	const {verts, tcoords} = getShape(sprites.ship, 16, 16, 1, 1);
+	const {verts, tcoords} = getShape(sprites.ship, 16, 16, 2, 2);
 
 	return {
 		shipShape: new Shape(verts, Shape.triangles),
@@ -190,12 +190,12 @@ export function makeShipRenderable(renderer, getCurrentShip) {
 	const {shipShape, shipMaterial} = getShipComponents();
 	const ship = renderer.getInstance(shipShape, shipMaterial);
 	const exhausts = [
-		makeExhaustRenderable(renderer, -.0625, -.5, 0),
-		makeExhaustRenderable(renderer, +.0625, -.5, 0),
+		makeExhaustRenderable(renderer, -.125, -1, 0),
+		makeExhaustRenderable(renderer, +.125, -1, 0),
 	];
 	const guns = [
-		makeGunRenderable(renderer, -.25, -.25, 0),
-		makeGunRenderable(renderer, +.25, -.25, 0),
+		makeGunRenderable(renderer, -.5, -.5, 0),
+		makeGunRenderable(renderer, +.5, -.5, 0),
 	];
 
 	ship.update = () => {

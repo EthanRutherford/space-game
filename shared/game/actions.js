@@ -5,10 +5,10 @@ export function flyShip(shipBody, controls) {
 	// add thrust from engines
 	const v = new Vector2D(0, 0);
 	if (controls.forward) {
-		v.y += 10;
+		v.y += 50;
 	}
 	if (controls.backward) {
-		v.y -= 2;
+		v.y -= 15;
 	}
 
 	shipBody.applyForce(shipBody.transform.times(v));
@@ -16,14 +16,14 @@ export function flyShip(shipBody, controls) {
 	// apply torque to rotate (or stop rotating)
 	let desiredAngVel = 0;
 	if (controls.left) {
-		desiredAngVel += 4;
+		desiredAngVel += 5;
 	}
 	if (controls.right) {
-		desiredAngVel -= 4;
+		desiredAngVel -= 5;
 	}
 
 	const diff = desiredAngVel - shipBody.angularVelocity;
-	const torque = clamp(diff, -1, 1);
+	const torque = clamp(diff, -1, 1) * 10;
 	shipBody.applyTorque(torque);
 	shipBody.setAsleep(false);
 
