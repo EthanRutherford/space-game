@@ -1,10 +1,7 @@
-export const roleNames = [
-	"spectator",
-	"pilot",
-	"gunner",
-];
+export const roleIds = {
+	spectator: 0,
+	pilot: 1,
+	gunner: 2,
+};
 
-export const roleIds = roleNames.reduce((map, role, index) => {
-	map[role] = index;
-	return map;
-}, {});
+export const roleNames = Object.keys(roleIds);
