@@ -40,6 +40,7 @@ const bgFragShader = `
 		highp float l = ceil(length(m));
 		highp float stepCount = l * 2.0;
 		highp vec2 stepSize = stepCount > 0.0 ? m / stepCount : m;
+		highp float sizeMod = stepCount > 0.0 ? .2 / stepCount : .2;
 
 		for (highp float i = 0.0; i < 50.0; i++) {
 			if (i > stepCount) {
@@ -50,7 +51,7 @@ const bgFragShader = `
 			highp vec2 rxy = floor(sxy + .5);
 			highp float r = rand(rxy);
 			
-			if (r > .999 && distance(sxy, rxy) < .5 - (.2 * i / stepCount)) {
+			if (r > .999 && distance(sxy, rxy) < .5 - (i * sizeMod)) {
 				highp float str = 1.0 - (l > 0.0 ? distance(xy, sxy) / l : 0.0);
 				gl_FragColor = vec4(str, str, str, 1);
 				return;
