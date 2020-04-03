@@ -17,8 +17,8 @@ export class Game {
 		const asteroids = [];
 		for (let i = 0; i < 100; i++) {
 			const position = new Vector2D(
-				Math.random() * 500 - 250,
-				Math.random() * 500 - 250,
+				Math.random() * 1000 - 500,
+				Math.random() * 1000 - 500,
 			);
 			const angularVelocity = Math.random() * .2 - .1;
 			const radius = Math.random() * 2 + 1;
