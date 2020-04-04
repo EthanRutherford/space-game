@@ -4,6 +4,7 @@ import {physTime, physTimeMs} from "Shared/game/constants";
 import {GameState} from "Shared/game/game-state";
 import {flyShip} from "Shared/game/actions";
 import {Ship, Asteroid, DebugBox} from "Shared/game/objects";
+import {roleIds} from "Shared/game/roles";
 import {Action} from "Shared/serial";
 const {Vector2D} = VectorMath;
 
@@ -108,6 +109,22 @@ export class Game {
 			if (action.type === Action.debug) {
 				action.body = DebugBox.createBody(action);
 			}
+		}
+	}
+	handleDisconnected(role) {
+		if (role === roleIds.pilot) {
+			this.actionBuffer[0].push({
+				type: Action.flightControls,
+				forward: false,
+				backward: false,
+				left: false,
+				right: false,
+			});
+		} else if (role === roleIds.gunner) {
+			this.actionBuffer[0].push({
+				type: Action.gunControls,
+				firingLazer: false,
+			});
 		}
 	}
 	getState() {

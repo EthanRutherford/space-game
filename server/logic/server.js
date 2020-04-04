@@ -70,6 +70,11 @@ function initGameClient(game, ws) {
 			game.addAction(message.data, ws.userId);
 		}
 	};
+
+	// handle client disconnect
+	ws.on("close", () => {
+		game.handleDisconnected(ws.role);
+	});
 }
 
 function initGame(wss) {

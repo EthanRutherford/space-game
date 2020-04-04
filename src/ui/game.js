@@ -9,7 +9,12 @@ const {Vector2D} = VectorMath;
 export function GameUi(props) {
 	const canvas = useRef();
 	const game = useRef();
-	const controls = useMemo(() => ({aim: {x: 0, y: 2}, changed: false}), []);
+	const controls = useMemo(() => ({
+		flight: {},
+		aim: new Vector2D(0, 2),
+		changed: false,
+	}), []);
+
 	useEffect(function() {
 		// create game
 		game.current = new Game(canvas.current, props.userId);
@@ -27,7 +32,19 @@ export function GameUi(props) {
 		// add global listeners
 		window.addEventListener("keydown", keyDown);
 		window.addEventListener("keyup", keyUp);
+		window.addEventListener("mousedown", mouseDown);
+		window.addEventListener("mouseup", mouseUp);
 		window.addEventListener("mousemove", mouseMove);
+		window.addEventListener("blur", blur);
+
+		return () => {
+			window.removeEventListener("keydown", keyDown);
+			window.removeEventListener("keyup", keyUp);
+			window.removeEventListener("mousedown", mouseDown);
+			window.removeEventListener("mouseup", mouseUp);
+			window.removeEventListener("mousemove", mouseMove);
+			window.removeEventListener("blur", blur);
+		};
 	}, []);
 
 	function postSolve(frameId) {
@@ -36,7 +53,7 @@ export function GameUi(props) {
 				const action = {
 					type: Action.flightControls,
 					frameId,
-					...controls,
+					...controls.flight,
 				};
 
 				game.current.addAction(action);
@@ -80,16 +97,16 @@ export function GameUi(props) {
 	function keyDown(event) {
 		if (props.role === roleIds.pilot) {
 			if (event.key === "w") {
-				controls.forward = true;
+				controls.flight.forward = true;
 				controls.changed = true;
 			} else if (event.key === "a") {
-				controls.left = true;
+				controls.flight.left = true;
 				controls.changed = true;
 			} else if (event.key === "s") {
-				controls.backward = true;
+				controls.flight.backward = true;
 				controls.changed = true;
 			} else if (event.key === "d") {
-				controls.right = true;
+				controls.flight.right = true;
 				controls.changed = true;
 			}
 		}
@@ -98,16 +115,16 @@ export function GameUi(props) {
 	function keyUp(event) {
 		if (props.role === roleIds.pilot) {
 			if (event.key === "w") {
-				controls.forward = false;
+				controls.flight.forward = false;
 				controls.changed = true;
 			} else if (event.key === "a") {
-				controls.left = false;
+				controls.flight.left = false;
 				controls.changed = true;
 			} else if (event.key === "s") {
-				controls.backward = false;
+				controls.flight.backward = false;
 				controls.changed = true;
 			} else if (event.key === "d") {
-				controls.right = false;
+				controls.flight.right = false;
 				controls.changed = true;
 			}
 		}
@@ -175,10 +192,14 @@ export function GameUi(props) {
 		}
 	}
 
+	function blur() {
+		controls.flight = {};
+		controls.firingLazer = false;
+		controls.changed = true;
+	}
+
 	return j({canvas: {
 		style: {display: "block", width: "100%", height: "100%"},
-		onMouseDown: mouseDown,
-		onMouseUp: mouseUp,
 		onWheel: wheel,
 		ref: canvas,
 	}});
