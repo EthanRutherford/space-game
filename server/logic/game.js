@@ -60,7 +60,7 @@ export class Game {
 				if (action.type === Action.flightControls) {
 					Object.assign(gameState.ship.controls, action);
 				} else if (action.type === Action.gunControls) {
-					gameState.ship.controls.aim.set(action);
+					Object.assign(gameState.ship.controls, action);
 				} else if (action.type === Action.debug) {
 					if (gameState.solver.bodyMap[action.body.id] == null) {
 						const debugBox = new DebugBox(action.body, action.clientId, frameId);

@@ -7,7 +7,7 @@ export const Ship = {
 		BodyState.bytify(state, ship.body);
 		Uint8.bytify(state, ship.hp);
 		FlightControls.bytify(state, ship.controls);
-		GunControls.bytify(state, ship.controls.aim);
+		GunControls.bytify(state, ship.controls);
 	},
 	parse: (state) => {
 		return {
@@ -15,7 +15,7 @@ export const Ship = {
 			hp: Uint8.parse(state),
 			controls: {
 				...FlightControls.parse(state),
-				aim: GunControls.parse(state),
+				...GunControls.parse(state),
 			},
 		};
 	},

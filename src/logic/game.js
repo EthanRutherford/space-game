@@ -2,7 +2,7 @@ import {Renderer, Scene, rgba, builtIn, shaders} from "2d-gl";
 import {fork, Math as VectorMath, Solver, AABB} from "boxjs";
 import {physTime, physTimeMs} from "Shared/game/constants";
 import {GameState} from "Shared/game/game-state";
-import {flyShip} from "Shared/game/actions";
+import {flyShip, castLazers} from "Shared/game/actions";
 import {Ship, Asteroid, DebugBox} from "Shared/game/objects";
 import {Action} from "Shared/serial";
 import {SpaceBgShader} from "../logic/background-shader";
@@ -30,9 +30,9 @@ export class Game {
 		this.scene.getVisibleFunc = this.getVisibleFunc.bind(this);
 
 		// add shaders
-		const blurShader = this.renderer.createShader(MotionBlur);
+		this.blurShader = this.renderer.createShader(MotionBlur);
+		this.scene.addPostProcShader(this.blurShader);
 		const bgShader = this.renderer.createShader(SpaceBgShader);
-		this.scene.addPostProcShader(blurShader);
 		this.scene.setBackgroundShader(bgShader);
 
 		// start render and step loops
@@ -48,6 +48,9 @@ export class Game {
 		this.errorMap = {};
 		this.renderables = {};
 		this.latestSync = null;
+
+		// data
+		this.lazerCastResult = {};
 	}
 	getVisibleFunc({x0, y0, x1, y1}) {
 		const visible = new Set();
@@ -115,7 +118,7 @@ export class Game {
 		// update ship
 		if (gameState.ship.body) {
 			const ship = this.renderables[gameState.ship.body.id];
-			ship.update();
+			ship.update(this.blurShader, this.gunAimData, this.lazerCastResult);
 		}
 
 		this.renderer.render(this.camera, this.scene);
@@ -251,7 +254,7 @@ export class Game {
 				if (action.type === Action.flightControls) {
 					Object.assign(gameState.ship.controls, action);
 				} else if (action.type === Action.gunControls) {
-					gameState.ship.controls.aim.set(action);
+					Object.assign(gameState.ship.controls, action);
 				} else if (action.type === Action.debug) {
 					if (gameState.solver.bodyMap[action.body.id] == null) {
 						gameState.solver.addBody(fork.cloneBody(action.body));
@@ -267,6 +270,15 @@ export class Game {
 			gameState.solver.solve(physTime);
 			this.tryApplyUpdate(frameId, gameState);
 			frameId++;
+		}
+
+		if (gameState.ship.body) {
+			this.gunAimData = gameState.ship.getGunAimData();
+			if (gameState.ship.controls.firingLazer) {
+				this.lazerCastResult = castLazers(gameState.solver, this.gunAimData);
+			} else {
+				this.lazerCastResult = {};
+			}
 		}
 
 		// add current frame to buffer

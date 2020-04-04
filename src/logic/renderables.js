@@ -1,6 +1,7 @@
 import {ImageLoader, rgba, builtIn} from "2d-gl";
 import {Math as VectorMath} from "boxjs";
 import earcut from "earcut";
+import {Ship} from "Shared/game/objects";
 import shipUrl from "../images/ship.png";
 import gunUrl from "../images/gun.png";
 import asteroidUrl from "../images/asteroid.png";
@@ -153,6 +154,45 @@ function makeExhaustRenderable(renderer, x, y, r) {
 	return exhaust;
 }
 
+const getLazerComponents = singleton(() => ({
+	lazerVerts: [
+		{x: 0, y: 0},
+		{x: .05, y: .1},
+		{x: .05, y: 50},
+		{x: 0, y: 50},
+		{x: -.05, y: 50},
+		{x: -.05, y: .1},
+	],
+	lazerMaterial: new VectorMaterial([
+		rgba(1, 1, 1),
+		rgba(.2, .6, 1),
+		rgba(.2, .6, 1),
+		rgba(1, 1, 1),
+		rgba(.2, .6, 1),
+		rgba(.2, .6, 1),
+	]),
+}));
+function makeLazerRenderable(renderer, x, y, r) {
+	const {lazerVerts, lazerMaterial} = getLazerComponents();
+	const lazerShape = new Shape(lazerVerts);
+	const lazer = renderer.getInstance(lazerShape, lazerMaterial);
+	lazer.x = x;
+	lazer.y = y;
+	lazer.r = r;
+	lazer.zIndex = 2;
+
+	lazer.update = (blurShader, lazerLength = 50) => {
+		blurShader.deblur(lazer);
+		const newVerts = lazerVerts.map((v) => ({...v}));
+		newVerts[2].y = lazerLength;
+		newVerts[3].y = lazerLength;
+		newVerts[4].y = lazerLength;
+		lazerShape.update(newVerts);
+	};
+
+	return lazer;
+}
+
 const getGunComponents = singleton(() => {
 	const {verts, tcoords} = getShape(sprites.gun, 8, 12, .5, .5);
 
@@ -161,21 +201,23 @@ const getGunComponents = singleton(() => {
 		gunMaterial: new SpriteMaterial(tcoords, sprites.gun, false),
 	};
 });
-function makeGunRenderable(renderer, x, y, r) {
+function makeGunRenderable(renderer, getCurrentShip, x, y, r) {
 	const {gunShape, gunMaterial} = getGunComponents();
 	const gun = renderer.getInstance(gunShape, gunMaterial);
 	gun.x = x;
 	gun.y = y;
 	gun.r = r;
+	gun.zIndex = 1;
 
-	gun.update = (ship, offset, aim) => {
-		const c = Math.cos(-ship.r);
-		const s = Math.sin(-ship.r);
-		const vector = new Vector2D(
-			c * aim.x - s * aim.y,
-			s * aim.x + c * aim.y,
-		).add(offset).sub(gun);
-		gun.r = Math.atan2(-vector.x, vector.y);
+	const {tip} = Ship.gunOffsets;
+	const lazer = makeLazerRenderable(renderer, tip.x, tip.y, 0);
+
+	gun.update = (blurShader, ship, rotation, lazerLength) => {
+		gun.r = rotation.radians - ship.r;
+		lazer.update(blurShader, lazerLength);
+	};
+	gun.getChildren = () => {
+		return getCurrentShip().controls.firingLazer ? [lazer] : [];
 	};
 
 	return gun;
@@ -196,20 +238,19 @@ export function makeShipRenderable(renderer, getCurrentShip) {
 		makeExhaustRenderable(renderer, -.125, -1, 0),
 		makeExhaustRenderable(renderer, +.125, -1, 0),
 	];
+	const {left, right} = Ship.gunOffsets;
 	const guns = [
-		makeGunRenderable(renderer, -.5, -.5, 0),
-		makeGunRenderable(renderer, +.5, -.5, 0),
+		makeGunRenderable(renderer, getCurrentShip, left.x, left.y, 0),
+		makeGunRenderable(renderer, getCurrentShip, right.x, right.y, 0),
 	];
 
-	ship.update = () => {
-		const currentShip = getCurrentShip();
+	ship.update = (blurShader, gunAimData, lazerCastResult) => {
 		for (const exhaust of exhausts) {
 			exhaust.update();
 		}
-		for (const gun of guns) {
-			const offset = currentShip.body.mass.center;
-			gun.update(ship, offset, currentShip.controls.aim);
-		}
+
+		guns[0].update(blurShader, ship, gunAimData.leftRotation, lazerCastResult.leftLength);
+		guns[1].update(blurShader, ship, gunAimData.rightRotation, lazerCastResult.rightLength);
 	};
 	ship.getChildren = () => {
 		return getCurrentShip().controls.forward ? exhausts.concat(guns) : guns;

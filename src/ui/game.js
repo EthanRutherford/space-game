@@ -9,7 +9,7 @@ const {Vector2D} = VectorMath;
 export function GameUi(props) {
 	const canvas = useRef();
 	const game = useRef();
-	const controls = useMemo(() => ({}), []);
+	const controls = useMemo(() => ({aim: {x: 0, y: 2}, changed: false}), []);
 	useEffect(function() {
 		// create game
 		game.current = new Game(canvas.current, props.userId);
@@ -31,31 +31,85 @@ export function GameUi(props) {
 	}, []);
 
 	function postSolve(frameId) {
+		if (controls.changed) {
+			if (props.role === roleIds.pilot) {
+				const action = {
+					type: Action.flightControls,
+					frameId,
+					...controls,
+				};
+
+				game.current.addAction(action);
+				props.channel.sendAction(action);
+			} else if (props.role === roleIds.gunner) {
+				if (controls.aimDirty) {
+					controls.aim = Vector2D.clone(game.current.renderer.viewportToWorld(
+						controls.clientAim.x,
+						controls.clientAim.y,
+						game.current.camera,
+					)).sub(game.current.camera);
+
+					controls.aimDirty = false;
+				}
+
+				const action = {
+					type: Action.gunControls,
+					frameId,
+					aim: controls.aim,
+					firingLazer: controls.firingLazer,
+				};
+
+				game.current.addAction(action);
+				props.channel.sendAction(action);
+			}
+			controls.changed = false;
+		}
+	}
+
+	function wheel(event) {
+		game.current.camera.zoom = Math.max(
+			game.current.camera.zoom + event.deltaY / 100, 1,
+		);
+
+		if (props.role === roleIds.gunner) {
+			controls.aimDirty = true;
+			controls.changed = true;
+		}
+	}
+
+	function keyDown(event) {
 		if (props.role === roleIds.pilot) {
-			const action = {
-				type: Action.flightControls,
-				frameId,
-				...controls,
-			};
+			if (event.key === "w") {
+				controls.forward = true;
+				controls.changed = true;
+			} else if (event.key === "a") {
+				controls.left = true;
+				controls.changed = true;
+			} else if (event.key === "s") {
+				controls.backward = true;
+				controls.changed = true;
+			} else if (event.key === "d") {
+				controls.right = true;
+				controls.changed = true;
+			}
+		}
+	}
 
-			game.current.addAction(action);
-			props.channel.sendAction(action);
-		} else if (props.role === roleIds.gunner && controls.aim) {
-			const aim = Vector2D.clone(game.current.renderer.viewportToWorld(
-				controls.aim.x,
-				controls.aim.y,
-				game.current.camera,
-			)).sub(game.current.camera);
-
-			const action = {
-				type: Action.gunControls,
-				frameId,
-				...aim,
-			};
-
-			game.current.addAction(action);
-			props.channel.sendAction(action);
-			controls.aim = null;
+	function keyUp(event) {
+		if (props.role === roleIds.pilot) {
+			if (event.key === "w") {
+				controls.forward = false;
+				controls.changed = true;
+			} else if (event.key === "a") {
+				controls.left = false;
+				controls.changed = true;
+			} else if (event.key === "s") {
+				controls.backward = false;
+				controls.changed = true;
+			} else if (event.key === "d") {
+				controls.right = false;
+				controls.changed = true;
+			}
 		}
 	}
 
@@ -64,22 +118,32 @@ export function GameUi(props) {
 			return;
 		}
 
-		const clientOrigin = {x: event.clientX, y: event.clientY};
+		if (props.role === roleIds.gunner) {
+			controls.firingLazer = true;
+			controls.changed = true;
+		} else {
+			controls.clientOrigin = {x: event.clientX, y: event.clientY};
+		}
+	}
 
-		const mouseUp = (innerEvent) => {
-			if (innerEvent.button !== 0) {
-				return;
-			}
+	function mouseUp(event) {
+		if (event.button !== 0) {
+			return;
+		}
 
+		if (props.role === roleIds.gunner) {
+			controls.firingLazer = false;
+			controls.changed = true;
+		} else {
 			const origin = game.current.renderer.viewportToWorld(
-				clientOrigin.x,
-				clientOrigin.y,
+				controls.clientOrigin.x,
+				controls.clientOrigin.y,
 				game.current.camera,
 			);
 
 			const v = Vector2D.clone(game.current.renderer.viewportToWorld(
-				innerEvent.clientX,
-				innerEvent.clientY,
+				event.clientX,
+				event.clientY,
 				game.current.camera,
 			)).sub(origin);
 
@@ -97,59 +161,24 @@ export function GameUi(props) {
 
 			game.current.addAction(action);
 			props.channel.sendAction(action);
-
-			window.removeEventListener("mouseup", mouseUp);
-		};
-
-		window.addEventListener("mouseup", mouseUp);
-	}
-
-	function wheel(event) {
-		game.current.camera.zoom = Math.max(
-			game.current.camera.zoom + event.deltaY / 100, 1,
-		);
-	}
-
-	function keyDown(event) {
-		if (props.role === roleIds.pilot) {
-			if (event.key === "w") {
-				controls.forward = true;
-			} else if (event.key === "a") {
-				controls.left = true;
-			} else if (event.key === "s") {
-				controls.backward = true;
-			} else if (event.key === "d") {
-				controls.right = true;
-			}
-		}
-	}
-
-	function keyUp(event) {
-		if (props.role === roleIds.pilot) {
-			if (event.key === "w") {
-				controls.forward = false;
-			} else if (event.key === "a") {
-				controls.left = false;
-			} else if (event.key === "s") {
-				controls.backward = false;
-			} else if (event.key === "d") {
-				controls.right = false;
-			}
 		}
 	}
 
 	function mouseMove(event) {
 		if (props.role === roleIds.gunner) {
-			controls.aim = {
+			controls.clientAim = {
 				x: event.clientX,
 				y: event.clientY,
 			};
+			controls.aimDirty = true;
+			controls.changed = true;
 		}
 	}
 
 	return j({canvas: {
 		style: {display: "block", width: "100%", height: "100%"},
 		onMouseDown: mouseDown,
+		onMouseUp: mouseUp,
 		onWheel: wheel,
 		ref: canvas,
 	}});

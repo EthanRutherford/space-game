@@ -33,3 +33,41 @@ export function flyShip(shipBody, controls) {
 		shipBody.velocity.mul(100);
 	}
 }
+
+export function castLazers(solver, gunAimData) {
+	const {
+		leftPosition,
+		leftRotation,
+		rightPosition,
+		rightRotation,
+		tip,
+	} = gunAimData;
+
+	const beamLength = 50;
+	const beam = new Vector2D(0, beamLength);
+	const leftTip = leftRotation.times(tip).add(leftPosition);
+	const leftEnd = leftRotation.times(beam).add(leftTip);
+	const rightTip = rightRotation.times(tip).add(rightPosition);
+	const rightEnd = rightRotation.times(beam).add(rightTip);
+
+	const result = {};
+	solver.raycast({
+		p1: leftTip,
+		p2: leftEnd,
+		callback(castData) {
+			result.leftHit = castData.shape.body;
+			result.leftLength = castData.fraction * 50;
+		},
+	});
+
+	solver.raycast({
+		p1: rightTip,
+		p2: rightEnd,
+		callback(castData) {
+			result.rightHit = castData.shape.body;
+			result.rightLength = castData.fraction * 50;
+		},
+	});
+
+	return result;
+}

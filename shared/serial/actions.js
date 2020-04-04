@@ -39,10 +39,18 @@ const FlightControlsAction = {
 
 export const GunControls = {
 	bytify: (state, action) => {
-		Vector.bytify(state, action);
+		Vector.bytify(state, action.aim);
+		Bools.bytify(state, [
+			action.firingLazer,
+		], 1);
 	},
 	parse: (state) => {
-		return Vector.parse(state);
+		const aim = Vector.parse(state);
+		const bools = Bools.parse(state, 1);
+		return {
+			aim,
+			firingLazer: bools[0],
+		};
 	},
 };
 
