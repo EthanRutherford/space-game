@@ -17,7 +17,8 @@ export class Game {
 		this.userId = userId;
 
 		const solver = new Solver();
-		const ship = new Ship(null);
+		const shipBody = Ship.createBody();
+		const ship = new Ship(shipBody);
 
 		const frame0 = new GameState(solver, ship);
 		this.frameBuffer = [frame0, null, null, null, null];
@@ -49,6 +50,11 @@ export class Game {
 		this.renderables = {};
 		this.latestSync = null;
 
+		// initialize ship
+		const renderable = makeShipRenderable(this.renderer, () => this.getGameState().ship);
+		this.addBody(frame0, 0, shipBody, renderable);
+		this.idMap[0] = 0;
+
 		// data
 		this.lazerCastResult = {};
 	}
@@ -79,18 +85,16 @@ export class Game {
 
 		// update camera position
 		const gameState = this.getGameState();
-		if (gameState.ship.body != null) {
-			const errors = this.errorMap[gameState.ship.body.id];
-			const prevPos = gameState.ship.body.prevPos.minus(errors);
-			const currentPos = gameState.ship.body.position.minus({
-				x: errors.x * .85,
-				y: errors.y * .85,
-			});
+		const errors = this.errorMap[gameState.ship.body.id];
+		const prevPos = gameState.ship.body.prevPos.minus(errors);
+		const currentPos = gameState.ship.body.position.minus({
+			x: errors.x * .85,
+			y: errors.y * .85,
+		});
 
-			const pos = vLerp(prevPos, currentPos, ratio);
-			this.camera.x += (pos.x - this.camera.x) * .99;
-			this.camera.y += (pos.y - this.camera.y) * .99;
-		}
+		const pos = vLerp(prevPos, currentPos, ratio);
+		this.camera.x += (pos.x - this.camera.x) * .99;
+		this.camera.y += (pos.y - this.camera.y) * .99;
 
 		// update renderable positions and error deltas
 		for (const body of gameState.solver.bodies) {
@@ -116,11 +120,10 @@ export class Game {
 		}
 
 		// update ship
-		if (gameState.ship.body) {
-			const ship = this.renderables[gameState.ship.body.id];
-			ship.update(this.blurShader, this.gunAimData, this.lazerCastResult);
-		}
+		const ship = this.renderables[gameState.ship.body.id];
+		ship.update(this.blurShader, this.gunAimData, this.lazerCastResult);
 
+		// render scene
 		this.renderer.render(this.camera, this.scene);
 	}
 	addBody(gameState, serverId, body, renderable) {
@@ -142,14 +145,7 @@ export class Game {
 
 		gameState.ship.hp = this.latestSync.ship.hp;
 		Object.assign(gameState.ship.controls, this.latestSync.ship.controls);
-		if (this.idMap[this.latestSync.ship.body.id] == null) {
-			const body = Ship.createBody(this.latestSync.ship.body);
-			const renderable = makeShipRenderable(this.renderer, () => this.getGameState().ship);
-			this.addBody(gameState, this.latestSync.ship.body.id, body, renderable);
-			gameState.ship.body = body;
-		} else {
-			updates.push(this.latestSync.ship.body);
-		}
+		updates.push(this.latestSync.ship.body);
 
 		for (const asteroid of this.latestSync.asteroids) {
 			if (this.idMap[asteroid.body.id] == null) {
@@ -262,23 +258,19 @@ export class Game {
 				}
 			}
 
-			if (gameState.ship.body) {
-				flyShip(gameState.ship.body, gameState.ship.controls);
-			}
-
+			flyShip(gameState.ship.body, gameState.ship.controls);
 			this.frameBuffer[index] = gameState.fork();
 			gameState.solver.solve(physTime);
 			this.tryApplyUpdate(frameId, gameState);
+
 			frameId++;
 		}
 
-		if (gameState.ship.body) {
-			this.gunAimData = gameState.ship.getGunAimData();
-			if (gameState.ship.controls.firingLazer) {
-				this.lazerCastResult = castLazers(gameState.solver, this.gunAimData);
-			} else {
-				this.lazerCastResult = {};
-			}
+		this.gunAimData = gameState.ship.getGunAimData();
+		if (gameState.ship.controls.firingLazer) {
+			this.lazerCastResult = castLazers(gameState.solver, this.gunAimData);
+		} else {
+			this.lazerCastResult = {};
 		}
 
 		// add current frame to buffer
