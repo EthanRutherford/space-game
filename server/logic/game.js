@@ -1,8 +1,8 @@
 import {performance} from "perf_hooks";
 import {Solver, Math as VectorMath} from "boxjs";
-import {physTime, physTimeMs} from "Shared/game/constants";
+import {physTimeMs} from "Shared/game/constants";
+import {stepCore, postStepCore} from "Shared/game/step-core";
 import {GameState} from "Shared/game/game-state";
-import {flyShip} from "Shared/game/actions";
 import {Ship, Asteroid, DebugBox} from "Shared/game/objects";
 import {roleIds} from "Shared/game/roles";
 import {Action} from "Shared/serial";
@@ -56,24 +56,14 @@ export class Game {
 		// apply actions and step forward
 		while (frameId <= this.frameId) {
 			const index = this.frameId - frameId;
+			this.frameBuffer[index] = stepCore(
+				gameState,
+				this.actionBuffer[index],
+				frameId,
+				true,
+			);
 
-			for (const action of this.actionBuffer[index]) {
-				if (action.type === Action.flightControls) {
-					Object.assign(gameState.ship.controls, action);
-				} else if (action.type === Action.gunControls) {
-					Object.assign(gameState.ship.controls, action);
-				} else if (action.type === Action.debug) {
-					if (gameState.solver.bodyMap[action.body.id] == null) {
-						const debugBox = new DebugBox(action.body, action.clientId, frameId);
-						gameState.debugBoxes.push(debugBox);
-						gameState.solver.addBody(debugBox.body);
-					}
-				}
-			}
-
-			flyShip(gameState.ship.body, gameState.ship.controls);
-			this.frameBuffer[index] = gameState.fork();
-			gameState.solver.solve(physTime);
+			postStepCore(gameState, true);
 
 			frameId++;
 		}

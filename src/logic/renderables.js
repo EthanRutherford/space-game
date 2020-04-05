@@ -244,7 +244,7 @@ export function makeShipRenderable(renderer, getCurrentShip) {
 		makeGunRenderable(renderer, getCurrentShip, right.x, right.y, 0),
 	];
 
-	ship.update = (blurShader, gunAimData, lazerCastResult) => {
+	ship.update = (blurShader, gunAimData, lazerCastResult = {}) => {
 		for (const exhaust of exhausts) {
 			exhaust.update();
 		}

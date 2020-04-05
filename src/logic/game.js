@@ -1,8 +1,9 @@
 import {Renderer, Scene, rgba, builtIn, shaders} from "2d-gl";
-import {fork, Math as VectorMath, Solver, AABB} from "boxjs";
-import {physTime, physTimeMs} from "Shared/game/constants";
+import {Math as VectorMath, Solver, AABB} from "boxjs";
+import {physTimeMs} from "Shared/game/constants";
+import {stepCore, postStepCore} from "Shared/game/step-core";
 import {GameState} from "Shared/game/game-state";
-import {flyShip, castLazers} from "Shared/game/actions";
+import {castLazers} from "Shared/game/actions";
 import {Ship, Asteroid, DebugBox} from "Shared/game/objects";
 import {Action} from "Shared/serial";
 import {SpaceBgShader} from "../logic/background-shader";
@@ -54,9 +55,6 @@ export class Game {
 		const renderable = makeShipRenderable(this.renderer, () => this.getGameState().ship);
 		this.addBody(frame0, 0, shipBody, renderable);
 		this.idMap[0] = 0;
-
-		// data
-		this.lazerCastResult = {};
 	}
 	getVisibleFunc({x0, y0, x1, y1}) {
 		const visible = new Set();
@@ -245,32 +243,21 @@ export class Game {
 		// step forward and apply sync
 		while (frameId <= this.frameId) {
 			const index = this.frameId - frameId;
+			this.frameBuffer[index] = stepCore(
+				gameState,
+				this.actionBuffer[index],
+				frameId,
+				false,
+			);
 
-			for (const action of this.actionBuffer[index]) {
-				if (action.type === Action.flightControls) {
-					Object.assign(gameState.ship.controls, action);
-				} else if (action.type === Action.gunControls) {
-					Object.assign(gameState.ship.controls, action);
-				} else if (action.type === Action.debug) {
-					if (gameState.solver.bodyMap[action.body.id] == null) {
-						gameState.solver.addBody(fork.cloneBody(action.body));
-					}
-				}
-			}
-
-			flyShip(gameState.ship.body, gameState.ship.controls);
-			this.frameBuffer[index] = gameState.fork();
-			gameState.solver.solve(physTime);
+			// apply any updates from the server
 			this.tryApplyUpdate(frameId, gameState);
 
-			frameId++;
-		}
+			const postStep = postStepCore(gameState, false);
+			this.gunAimData = postStep.gunAimData;
+			this.lazerCastResult = postStep.lazerCastResult;
 
-		this.gunAimData = gameState.ship.getGunAimData();
-		if (gameState.ship.controls.firingLazer) {
-			this.lazerCastResult = castLazers(gameState.solver, this.gunAimData);
-		} else {
-			this.lazerCastResult = {};
+			frameId++;
 		}
 
 		// add current frame to buffer
