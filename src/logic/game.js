@@ -119,7 +119,7 @@ export class Game {
 
 		// update ship
 		const ship = this.renderables[gameState.ship.body.id];
-		ship.update(this.blurShader, this.gunAimData, this.lazerCastResult);
+		ship.update(this.gunAimData, this.lazerCastResult);
 
 		// render scene
 		this.renderer.render(this.camera, this.scene);

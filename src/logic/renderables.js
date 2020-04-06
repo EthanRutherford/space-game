@@ -181,8 +181,7 @@ function makeLazerRenderable(renderer, x, y, r) {
 	lazer.r = r;
 	lazer.zIndex = 2;
 
-	lazer.update = (blurShader, lazerLength = 50) => {
-		blurShader.deblur(lazer);
+	lazer.update = (lazerLength = 50) => {
 		const newVerts = lazerVerts.map((v) => ({...v}));
 		newVerts[2].y = lazerLength;
 		newVerts[3].y = lazerLength;
@@ -212,9 +211,9 @@ function makeGunRenderable(renderer, getCurrentShip, x, y, r) {
 	const {tip} = Ship.gunOffsets;
 	const lazer = makeLazerRenderable(renderer, tip.x, tip.y, 0);
 
-	gun.update = (blurShader, ship, rotation, lazerLength) => {
+	gun.update = (ship, rotation, lazerLength) => {
 		gun.r = rotation.radians - ship.r;
-		lazer.update(blurShader, lazerLength);
+		lazer.update(lazerLength);
 	};
 	gun.getChildren = () => {
 		return getCurrentShip().controls.firingLazer ? [lazer] : [];
@@ -244,13 +243,13 @@ export function makeShipRenderable(renderer, getCurrentShip) {
 		makeGunRenderable(renderer, getCurrentShip, right.x, right.y, 0),
 	];
 
-	ship.update = (blurShader, gunAimData, lazerCastResult = {}) => {
+	ship.update = (gunAimData, lazerCastResult = {}) => {
 		for (const exhaust of exhausts) {
 			exhaust.update();
 		}
 
-		guns[0].update(blurShader, ship, gunAimData.leftRotation, lazerCastResult.leftLength);
-		guns[1].update(blurShader, ship, gunAimData.rightRotation, lazerCastResult.rightLength);
+		guns[0].update(ship, gunAimData.leftRotation, lazerCastResult.leftLength);
+		guns[1].update(ship, gunAimData.rightRotation, lazerCastResult.rightLength);
 	};
 	ship.getChildren = () => {
 		return getCurrentShip().controls.forward ? exhausts.concat(guns) : guns;
