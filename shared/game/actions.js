@@ -33,19 +33,17 @@ export function flyShip(shipBody, controls) {
 		shipBody.velocity.mul(100);
 	}
 
-	// bound game between 1000 and -1000
+	// bound game between 15000 and -15000
 	// TODO: probably will want something more appealing than an invisible rubber-band
-	if (shipBody.position.x > 1000) {
-		shipBody.velocity.x -= (shipBody.position.x - 1000) * .1;
+	if (shipBody.position.x > 15000) {
+		shipBody.velocity.x -= (shipBody.position.x - 15000) * .1;
+	} else if (shipBody.position.x < -15000) {
+		shipBody.velocity.x -= (shipBody.position.x + 15000) * .1;
 	}
-	if (shipBody.position.x < -1000) {
-		shipBody.velocity.x -= (shipBody.position.x + 1000) * .1;
-	}
-	if (shipBody.position.y > 1000) {
-		shipBody.velocity.y -= (shipBody.position.y - 1000) * .1;
-	}
-	if (shipBody.position.y < -1000) {
-		shipBody.velocity.y -= (shipBody.position.y + 1000) * .1;
+	if (shipBody.position.y > 15000) {
+		shipBody.velocity.y -= (shipBody.position.y - 15000) * .1;
+	} else if (shipBody.position.y < -15000) {
+		shipBody.velocity.y -= (shipBody.position.y + 15000) * .1;
 	}
 }
 
