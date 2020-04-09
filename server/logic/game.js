@@ -6,7 +6,8 @@ import {GameState} from "Shared/game/game-state";
 import {Ship, Asteroid, DebugBox} from "Shared/game/objects";
 import {roleIds} from "Shared/game/roles";
 import {Action} from "Shared/serial";
-const {Vector2D} = VectorMath;
+import {Random} from "Shared/random";
+const {Vector2D, Rotation} = VectorMath;
 
 export class Game {
 	constructor() {
@@ -15,14 +16,17 @@ export class Game {
 		const ship = new Ship(shipBody);
 		solver.addBody(shipBody);
 
+		const center = new Vector2D(0, Random.item([1, -1]) * Random.float(100, 10000));
+		const transform = new Rotation(Random.float(-1, 1));
 		const asteroids = [];
 		for (let i = 0; i < 100; i++) {
-			const position = new Vector2D(
-				Math.random() * 1000 - 500,
-				Math.random() * 1000 - 500,
-			);
-			const angularVelocity = Math.random() * .2 - .1;
-			const radius = Math.random() * 2 + 1;
+			const position = center.plus(transform.times(new Vector2D(
+				Random.float(-5000, 5000),
+				Random.float(-50, 50),
+			)));
+
+			const angularVelocity = Random.float(-.1, .1);
+			const radius = Random.float(1, 2);
 			const astBody = Asteroid.createBody({position, angularVelocity}, radius);
 			asteroids.push(new Asteroid(astBody, radius));
 			solver.addBody(astBody);

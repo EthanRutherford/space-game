@@ -2,6 +2,7 @@ import {ImageLoader, rgba, builtIn} from "2d-gl";
 import {Math as VectorMath} from "boxjs";
 import earcut from "earcut";
 import {Ship} from "Shared/game/objects";
+import {Random} from "Shared/random";
 import shipUrl from "../images/ship.png";
 import gunUrl from "../images/gun.png";
 import asteroidUrl from "../images/asteroid.png";
@@ -146,8 +147,8 @@ function makeExhaustRenderable(renderer, x, y, r) {
 
 	exhaust.update = () => {
 		const newVerts = exhaustVerts.map((v) => ({...v}));
-		newVerts[2].x += (Math.floor(Math.random() * 3) - 1) * .02;
-		newVerts[2].y += (Math.floor(Math.random() * 3) - 1) * .02;
+		newVerts[2].x += Random.float(-.05, .05);
+		newVerts[2].y += Random.float(-.05, .05);
 		exhaustShape.update(newVerts);
 	};
 
