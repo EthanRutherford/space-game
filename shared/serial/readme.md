@@ -18,7 +18,6 @@ I will use `JSON` as the baseline for comparison, primarily because
 of both its popularity and the fact that it's built in to all
 javascript engines natively (and presumeably, well optimized).
 
-
 ### Transmission sizes
 In regards to total message byte size, a message from `serial` is typically
 about 1/5 the size of the equivalent `JSON`. There are two main reasons for
@@ -30,7 +29,7 @@ bracket, a colon for every key-value in an object, a comma between
 each item in an object or array, and a pair of quotes for every string,
 which includes every key in an object. In addition, there's the length
 of the key itself. A fairly sizable chunk of the message is spent on
-metadata. 
+metadata.
 
 The second, and more substantial savings comes from the fact that
 `JSON` is a string encoding, and the vast majority of `serial` messages
@@ -137,7 +136,7 @@ with versions built in other languages becomes desireable.
 
 -----------------------
 
-Ultimately, `serial` was not quite easy to write, and is quite simple. Being built
+Ultimately, `serial` was quite easy to write, and is quite simple. Being built
 on top of built in, highly efficient typed array api makes serialization both
 incredibly straightforward while also being highly efficient in both space and
 processing time. The public API is similarly simple to use and understand:
