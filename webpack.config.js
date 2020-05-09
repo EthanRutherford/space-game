@@ -6,31 +6,39 @@ const ServerWebpackPlugin = require("./tools/server-webpack-plugin");
 const port = 9000;
 
 module.exports = (env) => [{
-	entry: "./src/main.js",
+	entry: "./src/main.jsx",
 	output: {filename: "main.js"},
 	plugins: [
 		new MiniCssExtractPlugin({filename: "styles.css"}),
 	],
 	module: {
-		rules: [{
-			test: /\.css$/,
-			use: [
-				MiniCssExtractPlugin.loader,
-				{loader: "css-loader", options: {
-					camelCase: "only",
-					localIdentName: "[name]__[local]--[hash:base64:5]",
-					modules: true,
-				}},
-			],
-		}, {
-			test: /.png$/,
-			use: [
-				{loader: "file-loader", options: {publicPath: "/dist"}},
-			],
-		}],
+		rules: [
+			{
+				test: /\.css$/,
+				use: [
+					MiniCssExtractPlugin.loader,
+					{loader: "css-loader", options: {
+						camelCase: "only",
+						localIdentName: "[name]__[local]--[hash:base64:5]",
+						modules: true,
+					}},
+				],
+			}, {
+				test: /.png$/,
+				use: [
+					{loader: "file-loader", options: {publicPath: "/dist"}},
+				],
+			}, {
+				test: /\.jsx$/,
+				exclude: /node_modules/,
+				use: [
+					"babel-loader",
+				],
+			},
+		],
 	},
 	resolve: {
-		extensions: [".js", ".json", ".css"],
+		extensions: [".js", ".jsx", ".json", ".css"],
 		alias: {
 			Shared: path.resolve(__dirname, "shared/"),
 		},

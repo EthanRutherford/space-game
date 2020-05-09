@@ -1,5 +1,4 @@
-import {useState, forwardRef} from "react";
-import j from "react-jenny";
+import React, {useState, forwardRef} from "react";
 
 export const AnimatedInput = forwardRef(function AnimatedInput({
 	className,
@@ -20,17 +19,19 @@ export const AnimatedInput = forwardRef(function AnimatedInput({
 		}
 	}
 
-	const type = activeClass ? "button" : "input";
+	const Type = activeClass ? "button" : "input";
 	const classToUse = `${className} ${state.active ? activeClass : state.hovering ? hoverClass : ""}`;
 
-	return j({[type]: {
-		className: classToUse,
-		onMouseEnter: () => setState({hovered: true, hovering: true}),
-		onMouseLeave: () => setState((old) => ({...old, hovered: false})),
-		onClick: () => activeClass && setState({active: true}),
-		onAnimationEnd: animationHandler,
-		onAnimationIteration: animationHandler,
-		ref,
-		...rest,
-	}});
+	return (
+		<Type
+			className={classToUse}
+			onMouseEnter={() => setState({hovered: true, hovering: true})}
+			onMouseLeave={() => setState((old) => ({...old, hovered: false}))}
+			onClick={() => activeClass && setState({active: true})}
+			onAnimationEnd={animationHandler}
+			onAnimationIteration={animationHandler}
+			ref={ref}
+			{...rest}
+		/>
+	);
 });

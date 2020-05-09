@@ -1,6 +1,5 @@
 import {render} from "react-dom";
-import {useState, useMemo} from "react";
-import j from "react-jenny";
+import React, {useState, useMemo} from "react";
 import {Config} from "Shared/serial";
 import {UserManager} from "./logic/user-manager";
 import {Menu} from "./ui/menu";
@@ -21,14 +20,14 @@ function App() {
 	}
 
 	if (page === "menu") {
-		return j([Menu, {startGame, userManager}]);
+		return <Menu startGame={startGame} userManager={userManager} />;
 	}
 
 	if (page === "game") {
-		return j([GameUi, userManager]);
+		return <GameUi userManager={userManager} />;
 	}
 
 	return Error("bad");
 }
 
-render(j([App]), document.getElementById("react-root"));
+render(<App />, document.getElementById("react-root"));

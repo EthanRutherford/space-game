@@ -1,12 +1,11 @@
-import {useRef, useMemo, useEffect} from "react";
-import j from "react-jenny";
+import React, {useRef, useMemo, useEffect} from "react";
 import {Math as VectorMath} from "boxjs";
 import {roleIds} from "Shared/game/roles";
 import {Timing, Action, Sync} from "Shared/serial";
 import {Game} from "../logic/game";
 const {Vector2D} = VectorMath;
 
-export function GameUi(props) {
+export function GameUi({userManager}) {
 	const canvas = useRef();
 	const game = useRef();
 	const controls = useMemo(() => ({
@@ -17,11 +16,11 @@ export function GameUi(props) {
 
 	useEffect(function() {
 		// create game
-		game.current = new Game(canvas.current, props.userId);
+		game.current = new Game(canvas.current, userManager.userId);
 		game.current.postSolve = postSolve;
 
 		// listen for updates
-		props.channel.addListener((message) => {
+		userManager.channel.addListener((message) => {
 			if (message.type === Timing) {
 				game.current.updateGameTime(message.data.time);
 			} else if (message.type === Sync) {
@@ -49,7 +48,7 @@ export function GameUi(props) {
 
 	function postSolve(frameId) {
 		if (controls.changed) {
-			if (props.role === roleIds.pilot) {
+			if (userManager.role === roleIds.pilot) {
 				const action = {
 					type: Action.flightControls,
 					frameId,
@@ -57,8 +56,8 @@ export function GameUi(props) {
 				};
 
 				game.current.addAction(action);
-				props.channel.sendAction(action);
-			} else if (props.role === roleIds.gunner) {
+				userManager.channel.sendAction(action);
+			} else if (userManager.role === roleIds.gunner) {
 				if (controls.aimDirty) {
 					controls.aim = Vector2D.clone(game.current.renderer.viewportToWorld(
 						controls.clientAim.x,
@@ -77,7 +76,7 @@ export function GameUi(props) {
 				};
 
 				game.current.addAction(action);
-				props.channel.sendAction(action);
+				userManager.channel.sendAction(action);
 			}
 			controls.changed = false;
 		}
@@ -88,14 +87,14 @@ export function GameUi(props) {
 			game.current.camera.zoom + event.deltaY / 100, 1,
 		);
 
-		if (props.role === roleIds.gunner) {
+		if (userManager.role === roleIds.gunner) {
 			controls.aimDirty = true;
 			controls.changed = true;
 		}
 	}
 
 	function keyDown(event) {
-		if (props.role === roleIds.pilot) {
+		if (userManager.role === roleIds.pilot) {
 			if (event.key === "w") {
 				controls.flight.forward = true;
 				controls.changed = true;
@@ -113,7 +112,7 @@ export function GameUi(props) {
 	}
 
 	function keyUp(event) {
-		if (props.role === roleIds.pilot) {
+		if (userManager.role === roleIds.pilot) {
 			if (event.key === "w") {
 				controls.flight.forward = false;
 				controls.changed = true;
@@ -135,7 +134,7 @@ export function GameUi(props) {
 			return;
 		}
 
-		if (props.role === roleIds.gunner) {
+		if (userManager.role === roleIds.gunner) {
 			controls.firingLazer = true;
 			controls.changed = true;
 		} else {
@@ -148,7 +147,7 @@ export function GameUi(props) {
 			return;
 		}
 
-		if (props.role === roleIds.gunner) {
+		if (userManager.role === roleIds.gunner) {
 			controls.firingLazer = false;
 			controls.changed = true;
 		} else {
@@ -177,12 +176,12 @@ export function GameUi(props) {
 			};
 
 			game.current.addAction(action);
-			props.channel.sendAction(action);
+			userManager.channel.sendAction(action);
 		}
 	}
 
 	function mouseMove(event) {
-		if (props.role === roleIds.gunner) {
+		if (userManager.role === roleIds.gunner) {
 			controls.clientAim = {
 				x: event.clientX,
 				y: event.clientY,
@@ -198,9 +197,11 @@ export function GameUi(props) {
 		controls.changed = true;
 	}
 
-	return j({canvas: {
-		style: {display: "block", width: "100%", height: "100%"},
-		onWheel: wheel,
-		ref: canvas,
-	}});
+	return (
+		<canvas
+			style={{display: "block", width: "100%", height: "100%"}}
+			onWheel={wheel}
+			ref={canvas}
+		/>
+	);
 }
