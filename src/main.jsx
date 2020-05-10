@@ -3,7 +3,7 @@ import React, {useState, useMemo} from "react";
 import {Config} from "Shared/serial";
 import {UserManager} from "./logic/user-manager";
 import {Menu} from "./ui/menu";
-import {GameUi} from "./ui/game";
+import {Game} from "./ui/game";
 import "./styles/reset";
 import "./styles/root";
 
@@ -24,7 +24,13 @@ function App() {
 	}
 
 	if (page === "game") {
-		return <GameUi userManager={userManager} />;
+		return (
+			<Game
+				userId={userManager.userId}
+				role={userManager.role}
+				channel={userManager.channel}
+			/>
+		);
 	}
 
 	return Error("bad");
