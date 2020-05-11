@@ -1,8 +1,8 @@
-import {performance} from "perf_hooks";
 import WebSocket from "ws";
 import {roleIds} from "Shared/game/roles";
-import {Config, Sync, Timing, Action, bytify, parse} from "Shared/serial";
+import {Config, Sync, Action, bytify, parse} from "Shared/serial";
 import {Game} from "./game";
+import {synchronize} from "./synchronizer";
 
 // eslint-disable-next-line no-console
 const handleError = (error) => error && console.error(error);
@@ -13,51 +13,6 @@ function broadCast(wss, type, ...args) {
 	for (const ws of wss.clients) {
 		ws.send(message, handleError);
 	}
-}
-
-function synchronize(ws, frameZero) {
-	// calculate round trip time for this connection
-	let count = -1;
-	let acc = 0;
-	let pingTime = null;
-	function ping() {
-		if (ws.readyState !== WebSocket.OPEN) {
-			return;
-		}
-
-		pingTime = performance.now();
-		ws.ping(handleError);
-	}
-
-	ws.on("pong", function() {
-		count++;
-
-		// ignore the first pong result, it is always
-		// really high for some reason
-		if (count === 0) {
-			ping();
-			return;
-		}
-
-		const rtt = performance.now() - pingTime;
-		acc += rtt;
-
-		if (count % 5 === 0) {
-			// tell client what the current game time is
-			const gameTime = performance.now() - frameZero;
-			const transitTime = acc / count / 2;
-			ws.send(bytify(Timing, gameTime + transitTime), handleError);
-
-			// reset and schedule another synchronization pass in 30 seconds
-			acc /= count;
-			count = 1;
-			setTimeout(ping, 30 * 1000);
-		} else {
-			ping();
-		}
-	});
-
-	setTimeout(ping, 100);
 }
 
 function initGameClient(game, ws) {
