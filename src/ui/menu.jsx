@@ -1,14 +1,14 @@
 import React, {useState, useEffect} from "react";
 import {roleNames} from "Shared/game/roles";
+import {spritesPromise} from "../logic/renderables";
 import {AnimatedInput} from "./animated-input";
 import styles from "../styles/menu";
-import {spritesPromise} from "../logic/renderables";
 
 export function Menu({startGame, userManager}) {
 	const [name, setName] = useState("");
 	const [spritesLoaded, setSpritesLoaded] = useState(false);
 	userManager.use();
-	const users = Object.values(userManager.otherClients);
+	const users = Object.entries(userManager.otherClients);
 
 	useEffect(() => {
 		spritesPromise.then(() => setSpritesLoaded(true));
@@ -57,8 +57,8 @@ export function Menu({startGame, userManager}) {
 					<div className={styles.row}>
 						{userManager.name} (you) - {roleNames[userManager.role]}
 					</div>
-					{users.map((user) => (
-						<div className={styles.row} key={user.id}>
+					{users.map(([id, user]) => (
+						<div className={styles.row} key={id}>
 							{user.name || "(unnamed)"} - {roleNames[user.role]}
 						</div>
 					))}
