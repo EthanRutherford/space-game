@@ -2,6 +2,7 @@ import {render} from "react-dom";
 import React, {useState, useMemo} from "react";
 import {Config} from "Shared/serial";
 import {UserManager} from "./logic/user-manager";
+import {dataChannel} from "./logic/data-channel";
 import {Menu} from "./ui/menu";
 import {Game} from "./ui/game";
 import "./styles/reset";
@@ -13,7 +14,7 @@ function App() {
 
 	function startGame() {
 		setPage("game");
-		userManager.channel.sendConfig({
+		dataChannel.sendConfig({
 			type: Config.start,
 			userId: userManager.userId,
 		});
@@ -28,7 +29,6 @@ function App() {
 			<Game
 				userId={userManager.userId}
 				role={userManager.role}
-				channel={userManager.channel}
 			/>
 		);
 	}

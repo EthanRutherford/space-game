@@ -292,11 +292,11 @@ export class Game {
 			this.postSolve(this.frameId);
 		}
 	}
-	updateGameTime(time) {
+	updateGameTime(time, timeStamp) {
 		// the server sends the current server game time, already
 		// offset by the transmission time.
 		// We use this to sync up local game time with the server.
-		this.frameZero = performance.now() - time;
+		this.frameZero = timeStamp - time;
 	}
 	updateSync(sync) {
 		this.latestSync = sync;

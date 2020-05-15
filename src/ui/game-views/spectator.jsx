@@ -1,12 +1,13 @@
 import React, {useEffect} from "react";
 import {Math as VectorMath} from "boxjs";
 import {Action} from "Shared/serial";
+import {dataChannel} from "../../logic/data-channel";
 import {useGame} from "./use-game";
 import {Viewport} from "./viewport";
 const {Vector2D} = VectorMath;
 
-export function Spectator({userId, channel}) {
-	const {game, canvas} = useGame(userId, channel);
+export function Spectator({userId}) {
+	const {game, canvas} = useGame(userId);
 
 	useEffect(() => {
 		let clientOrigin = {};
@@ -44,7 +45,7 @@ export function Spectator({userId, channel}) {
 				};
 
 				game.current.addAction(action);
-				channel.sendAction(action);
+				dataChannel.sendAction(action);
 			}
 		}
 

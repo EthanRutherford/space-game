@@ -10,8 +10,8 @@ const {Vector2D, Rotation} = VectorMath;
 const lidarStepSize = (Math.PI * 2) / (10 * physFPS);
 const rayCount = 25;
 
-export function Engineer({userId, channel}) {
-	const {game, canvas} = useGame(userId, channel);
+export function Engineer({userId}) {
+	const {game, canvas} = useGame(userId);
 	const mapCanvas = useRef();
 
 	useEffect(() => {

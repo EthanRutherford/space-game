@@ -1,10 +1,11 @@
 import React, {useEffect} from "react";
 import {Action} from "Shared/serial";
+import {dataChannel} from "../../logic/data-channel";
 import {useGame} from "./use-game";
 import {Viewport} from "./viewport";
 
-export function Pilot({userId, channel}) {
-	const {game, canvas} = useGame(userId, channel);
+export function Pilot({userId}) {
+	const {game, canvas} = useGame(userId);
 
 	useEffect(() => {
 		const controls = {};
@@ -45,7 +46,7 @@ export function Pilot({userId, channel}) {
 			};
 
 			game.current.addAction(action);
-			channel.sendAction(action);
+			dataChannel.sendAction(action);
 		};
 
 		window.addEventListener("keydown", keyDown);

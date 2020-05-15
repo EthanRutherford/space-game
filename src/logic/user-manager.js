@@ -1,10 +1,9 @@
 import {useState, useEffect} from "react";
-import {DataChannel} from "./data-channel";
+import {dataChannel} from "./data-channel";
 import {Config} from "Shared/serial";
 
 export class UserManager {
 	constructor() {
-		this.channel = new DataChannel();
 		this.userId = null;
 		this.name = "";
 		this.role = 0;
@@ -18,7 +17,7 @@ export class UserManager {
 			}
 		};
 
-		this.channel.addListener((message) => {
+		dataChannel.addListener((message) => {
 			if (message.type === Config) {
 				if (message.data.type === Config.init) {
 					this.userId = message.data.userId;
@@ -60,14 +59,14 @@ export class UserManager {
 		});
 	}
 	setName(name) {
-		this.channel.sendConfig({
+		dataChannel.sendConfig({
 			type: Config.name,
 			userId: this.userId,
 			name,
 		});
 	}
 	setRole(role) {
-		this.channel.sendConfig({
+		dataChannel.sendConfig({
 			type: Config.role,
 			userId: this.userId,
 			role,

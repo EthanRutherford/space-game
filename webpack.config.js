@@ -7,7 +7,10 @@ const port = 9000;
 
 module.exports = (env) => [{
 	entry: "./src/main.jsx",
-	output: {filename: "main.js"},
+	output: {
+		filename: "main.js",
+		publicPath: "/dist",
+	},
 	plugins: [
 		new MiniCssExtractPlugin({filename: "styles.css"}),
 	],
@@ -25,15 +28,15 @@ module.exports = (env) => [{
 				],
 			}, {
 				test: /.png$/,
-				use: [
-					{loader: "file-loader", options: {publicPath: "/dist"}},
-				],
+				use: "file-loader",
 			}, {
 				test: /\.jsx$/,
 				exclude: /node_modules/,
-				use: [
-					"babel-loader",
-				],
+				use: "babel-loader",
+			},
+			{
+				test: /\.worker\.js$/,
+				use: "worker-loader",
 			},
 		],
 	},
