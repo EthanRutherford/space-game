@@ -1,4 +1,5 @@
 /* eslint-disable no-process-env */
+const {DefinePlugin} = require("webpack");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const path = require("path");
 const ServerWebpackPlugin = require("./tools/server-webpack-plugin");
@@ -13,6 +14,7 @@ module.exports = (env) => [{
 	},
 	plugins: [
 		new MiniCssExtractPlugin({filename: "styles.css"}),
+		new DefinePlugin({IS_SERVER: JSON.stringify(false)}),
 	],
 	module: {
 		rules: [
@@ -46,7 +48,7 @@ module.exports = (env) => [{
 		},
 	},
 	mode: env === "prod" ? "production" : "development",
-	devtool: env === "prod" ? "" : "eval-source-map",
+	devtool: env === "prod" ? "" : "eval-cheap-module-source-map",
 	devServer: {
 		open: true,
 		publicPath: "/dist",
@@ -57,7 +59,9 @@ module.exports = (env) => [{
 }, {
 	entry: process.env.WEBPACK_DEV_SERVER ? "./server/logic/server.js" : "./server/main.js",
 	output: {filename: "server.js"},
-	plugins: process.env.WEBPACK_DEV_SERVER ? [new ServerWebpackPlugin()] : [],
+	plugins: [
+		new DefinePlugin({IS_SERVER: JSON.stringify(true)}),
+	].concat(process.env.WEBPACK_DEV_SERVER ? [new ServerWebpackPlugin()] : []),
 	resolve: {
 		extensions: [".js", ".json"],
 		alias: {
@@ -65,6 +69,6 @@ module.exports = (env) => [{
 		},
 	},
 	mode: env === "prod" ? "production" : "development",
-	devtool: env === "prod" ? "" : "eval-source-map",
+	devtool: env === "prod" ? "" : "eval-cheap-module-source-map",
 	target: "node",
 }];

@@ -1,9 +1,8 @@
 import {Renderer, Scene, rgba, builtIn, shaders} from "2d-gl";
-import {Math as VectorMath, Solver, AABB} from "boxjs";
+import {Math as VectorMath, AABB} from "boxjs";
 import {physTimeMs} from "Shared/game/constants";
-import {stepCore, postStepCore} from "Shared/game/step-core";
-import {GameState} from "Shared/game/game-state";
-import {Ship, Asteroid, DebugBox} from "Shared/game/objects";
+import {GameCore} from "Shared/game/game-core";
+import {Asteroid, DebugBox} from "Shared/game/objects";
 import {Action} from "Shared/serial";
 import {SpaceBgShader} from "../logic/background-shader";
 import {vLerp, aLerp} from "../logic/util";
@@ -17,14 +16,8 @@ export class Game {
 		this.userId = userId;
 		this.postSolveHandlers = new Set();
 
-		// initialize solver data
-		const solver = new Solver();
-		const shipBody = Ship.createBody();
-		const ship = new Ship(shipBody);
-
-		const frame0 = new GameState(solver, ship);
-		this.frameBuffer = [frame0, null, null, null, null];
-		this.actionBuffer = [[], null, null, null, null];
+		// initialize core game logic
+		this.gameCore = new GameCore();
 
 		// create renderer and related data
 		this.renderer = new Renderer(canvas);
@@ -38,14 +31,6 @@ export class Game {
 		const bgShader = this.renderer.createShader(SpaceBgShader);
 		this.scene.setBackgroundShader(bgShader);
 
-		// start render and step loops
-		this.animLoop = this.animLoop.bind(this);
-		this.stepLoop = this.stepLoop.bind(this);
-		this.frameId = 0;
-		this.frameZero = 0;
-		requestAnimationFrame(this.animLoop);
-		this.stepLoop();
-
 		// track updates from the server
 		this.idMap = {};
 		this.errorMap = {};
@@ -54,8 +39,19 @@ export class Game {
 
 		// initialize ship
 		const renderable = makeShipRenderable(this.renderer, () => this.getGameState().ship);
-		this.addBody(frame0, 0, shipBody, renderable);
+		this.scene.add(renderable);
 		this.idMap[0] = 0;
+		this.errorMap[0] = {x: 0, y: 0, r: 0};
+		this.renderables[0] = renderable;
+
+		// start render and step loops
+		this.tryApplyUpdate = this.tryApplyUpdate.bind(this);
+		this.animLoop = this.animLoop.bind(this);
+		this.stepLoop = this.stepLoop.bind(this);
+		this.frameId = 0;
+		this.frameZero = 0;
+		requestAnimationFrame(this.animLoop);
+		this.stepLoop();
 	}
 	getVisibleFunc({x0, y0, x1, y1}) {
 		const visible = new Set();
@@ -120,7 +116,7 @@ export class Game {
 
 		// update ship
 		const ship = this.renderables[gameState.ship.body.id];
-		ship.update(this.gunAimData, this.lazerCastResult);
+		ship.update(this.gameCore.gunAimData, this.gameCore.lazerCastResult);
 
 		// render scene
 		this.renderer.render(this.camera, this.scene);
@@ -224,8 +220,8 @@ export class Game {
 			this.frameId = currentFrameId;
 			// since we're skipping ahead, the framebuffer is now invalid.
 			// just fill the buffer with our latest frame and let sync catch us up.
-			this.frameBuffer.fill(this.frameBuffer[0]);
-			this.actionBuffer.fill([]);
+			this.gameCore.frameBuffer.fill(this.gameCore.frameBuffer[0]);
+			this.gameCore.actionBuffer.fill([]);
 		}
 
 		// adjust framezero if we're recieving syncs from the future
@@ -235,43 +231,19 @@ export class Game {
 		}
 
 		// prepare to replay time
-		let frameId = this.latestSync &&
-			this.frameId - this.latestSync.frameId < this.frameBuffer.length ?
+		const frameId = this.latestSync &&
+			this.frameId - this.latestSync.frameId < this.gameCore.length ?
 			this.latestSync.frameId :
 			this.frameId;
-		const gameState = this.frameBuffer[this.frameId - frameId];
 
 		// step forward and apply sync
-		while (frameId <= this.frameId) {
-			const index = this.frameId - frameId;
-			this.frameBuffer[index] = stepCore(
-				gameState,
-				this.actionBuffer[index],
-				frameId,
-				false,
-			);
-
-			// apply any updates from the server
-			this.tryApplyUpdate(frameId, gameState);
-
-			const postStep = postStepCore(gameState, false);
-			this.gunAimData = postStep.gunAimData;
-			this.lazerCastResult = postStep.lazerCastResult;
-
-			frameId++;
-		}
-
-		// add current frame to buffer
-		this.frameBuffer.unshift(gameState);
-		this.frameBuffer.pop();
-		this.actionBuffer.unshift([]);
-		const expiredActions = this.actionBuffer.pop();
+		const expiredActions = this.gameCore.doStep(frameId, this.frameId, this.tryApplyUpdate);
 
 		// delete bodies and data from expired actions
 		for (const expiredAction of expiredActions || []) {
 			if (expiredAction.type === Action.debug) {
 				if (!expiredAction.acked) {
-					for (const gameState of this.frameBuffer) {
+					for (const gameState of this.gameCore.frameBuffer) {
 						const body = gameState.solver.bodyMap[expiredAction.body.id];
 						if (body) {
 							gameState.solver.removeBody(body);
@@ -286,7 +258,7 @@ export class Game {
 		}
 
 		// update frameId
-		this.frameId = frameId;
+		this.frameId++;
 
 		// post solve
 		for (const handler of this.postSolveHandlers) {
@@ -312,21 +284,23 @@ export class Game {
 			this.renderables[action.body.id] = action.renderable;
 		}
 
-		this.actionBuffer[0].push(action);
+		this.gameCore.actionBuffer[0].push(action);
 	}
 	ackDebugAction(debugBox) {
 		if (
 			debugBox.frameId <= this.frameId &&
-			debugBox.frameId > this.frameId - this.frameBuffer.length
+			debugBox.frameId > this.frameId - this.gameCore.length
 		) {
 			const index = this.frameId - debugBox.frameId;
-			const action = this.actionBuffer[index].find((a) => a.type === Action.debug);
+			const action = this.gameCore.actionBuffer[index].find(
+				(a) => a.type === Action.debug,
+			);
 			action.acked = true;
 			this.idMap[debugBox.body.id] = action.body.id;
 		}
 	}
 	getGameState() {
-		return this.frameBuffer[0];
+		return this.gameCore.getGameState();
 	}
 	addPostSolveHandler(handler) {
 		this.postSolveHandlers.add(handler);

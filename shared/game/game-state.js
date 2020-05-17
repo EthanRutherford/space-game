@@ -8,6 +8,11 @@ export class GameState {
 		this.asteroids = asteroids;
 		this.debugBoxes = debugBoxes;
 	}
+	addAsteroid(options, radius) {
+		const astBody = Asteroid.createBody(options, radius);
+		this.asteroids.push(new Asteroid(astBody, radius));
+		this.solver.addBody(astBody);
+	}
 	fork() {
 		const newSolver = fork(this.solver);
 		const mappedShipBody = this.ship.body && newSolver.bodyMap[this.ship.body.id];
