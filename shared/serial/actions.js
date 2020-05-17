@@ -1,17 +1,6 @@
 import {Bools, Uint8, Uint32} from "./primitives";
 import {Vector} from "./vector";
 
-const Debug = {
-	bytify: (state, action) => {
-		Vector.bytify(state, action.position);
-		Vector.bytify(state, action.velocity);
-	},
-	parse: (state, action) => {
-		action.position = Vector.parse(state);
-		action.velocity = Vector.parse(state);
-	},
-};
-
 export const FlightControls = {
 	bytify: (state, action) => {
 		Bools.bytify(state, [
@@ -32,11 +21,6 @@ export const FlightControls = {
 	},
 };
 
-const FlightControlsAction = {
-	bytify: FlightControls.bytify,
-	parse: (state, action) => Object.assign(action, FlightControls.parse(state)),
-};
-
 export const GunControls = {
 	bytify: (state, action) => {
 		Vector.bytify(state, action.aim);
@@ -52,11 +36,6 @@ export const GunControls = {
 			firingLazer: bools[0],
 		};
 	},
-};
-
-const GunControlsAction = {
-	bytify: GunControls.bytify,
-	parse: (state, action) => Object.assign(action, GunControls.parse(state)),
 };
 
 export const EngineerControls = {
@@ -76,14 +55,24 @@ export const EngineerControls = {
 	},
 };
 
-const EngineerControlsAction = {
-	bytify: EngineerControls.bytify,
-	parse: (state, action) => Object.assign(action, EngineerControls.parse(state)),
+const Debug = {
+	bytify: (state, action) => {
+		Vector.bytify(state, action.position);
+		Vector.bytify(state, action.velocity);
+	},
+	parse: (state) => {
+		return {
+			position: Vector.parse(state),
+			velocity: Vector.parse(state),
+		};
+	},
 };
 
-const ACTION_MAP = [FlightControlsAction, GunControlsAction, EngineerControlsAction];
-ACTION_MAP[255] = Debug;
-ACTION_MAP.forEach((kind, index) => kind.ID = index);
+const ACTION_MAP = [];
+function makeAction({bytify, parse}) {
+	ACTION_MAP.push({bytify, parse: (state, action) => Object.assign(action, parse(state))});
+	return ACTION_MAP.length - 1;
+}
 
 export const Action = {
 	bytify: (state, action) => {
@@ -100,8 +89,8 @@ export const Action = {
 		ACTION_MAP[action.type].parse(state, action);
 		return action;
 	},
-	flightControls: FlightControlsAction.ID,
-	gunControls: GunControlsAction.ID,
-	engineerControls: EngineerControlsAction.ID,
-	debug: Debug.ID,
+	flightControls: makeAction(FlightControls),
+	gunControls: makeAction(GunControls),
+	engineerControls: makeAction(EngineerControls),
+	debug: makeAction(Debug),
 };

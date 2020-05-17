@@ -17,61 +17,11 @@ const User = {
 	},
 };
 
-const NewUser = {
-	bytify: (state, config) => {
-		User.bytify(state, config.user);
-	},
-	parse: (state, config) => {
-		config.user = User.parse(state);
-	},
-};
-
-const Init = {
-	bytify: (state, config) => {
-		Uint8.bytify(state, config.userId);
-		TypedArray.bytify(state, User, config.users);
-	},
-	parse: (state, config) => {
-		config.userId = Uint8.parse(state);
-		config.users = TypedArray.parse(state, User);
-	},
-};
-
-const Name = {
-	bytify: (state, config) => {
-		Uint8.bytify(state, config.userId);
-		Text.bytify(state, config.name);
-	},
-	parse: (state, config) => {
-		config.userId = Uint8.parse(state);
-		config.name = Text.parse(state);
-	},
-};
-
-const Role = {
-	bytify: (state, config) => {
-		Uint8.bytify(state, config.userId);
-		Uint8.bytify(state, config.role);
-	},
-	parse: (state, config) => {
-		config.userId = Uint8.parse(state);
-		config.role = Uint8.parse(state);
-	},
-};
-
-const UserDced = {
-	bytify: (state, config) => {
-		Uint8.bytify(state, config.userId);
-	},
-	parse: (state, config) => {
-		config.userId = Uint8.parse(state);
-	},
-};
-
-const Start = {bytify: () => {}, parse: () => {}};
-
-const CONFIG_MAP = [Init, Name, Role, NewUser, UserDced, Start];
-CONFIG_MAP.forEach((kind, index) => kind.ID = index);
+const CONFIG_MAP = [];
+function makeConfig(serial) {
+	CONFIG_MAP.push(serial);
+	return CONFIG_MAP.length - 1;
+}
 
 export const Config = {
 	bytify: (state, config) => {
@@ -83,10 +33,51 @@ export const Config = {
 		CONFIG_MAP[config.type].parse(state, config);
 		return config;
 	},
-	init: Init.ID,
-	name: Name.ID,
-	role: Role.ID,
-	newUser: NewUser.ID,
-	userDced: UserDced.ID,
-	start: Start.ID,
+	init: makeConfig({
+		bytify: (state, config) => {
+			Uint8.bytify(state, config.userId);
+			TypedArray.bytify(state, User, config.users);
+		},
+		parse: (state, config) => {
+			config.userId = Uint8.parse(state);
+			config.users = TypedArray.parse(state, User);
+		},
+	}),
+	name: makeConfig({
+		bytify: (state, config) => {
+			Uint8.bytify(state, config.userId);
+			Text.bytify(state, config.name);
+		},
+		parse: (state, config) => {
+			config.userId = Uint8.parse(state);
+			config.name = Text.parse(state);
+		},
+	}),
+	role: makeConfig({
+		bytify: (state, config) => {
+			Uint8.bytify(state, config.userId);
+			Uint8.bytify(state, config.role);
+		},
+		parse: (state, config) => {
+			config.userId = Uint8.parse(state);
+			config.role = Uint8.parse(state);
+		},
+	}),
+	newUser: makeConfig({
+		bytify: (state, config) => {
+			User.bytify(state, config.user);
+		},
+		parse: (state, config) => {
+			config.user = User.parse(state);
+		},
+	}),
+	userDced: makeConfig({
+		bytify: (state, config) => {
+			Uint8.bytify(state, config.userId);
+		},
+		parse: (state, config) => {
+			config.userId = Uint8.parse(state);
+		},
+	}),
+	start: makeConfig({bytify: () => {}, parse: () => {}}),
 };
