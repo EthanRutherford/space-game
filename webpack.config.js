@@ -33,8 +33,7 @@ module.exports = (env) => [{
 				test: /\.jsx$/,
 				exclude: /node_modules/,
 				use: "babel-loader",
-			},
-			{
+			}, {
 				test: /\.worker\.js$/,
 				use: "worker-loader",
 			},
