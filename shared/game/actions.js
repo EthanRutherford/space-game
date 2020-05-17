@@ -5,10 +5,10 @@ export function flyShip(shipBody, controls) {
 	// add thrust from engines
 	const v = new Vector2D(0, 0);
 	if (controls.forward) {
-		v.y += 50;
+		v.y += 25 * controls.enginePower;
 	}
 	if (controls.backward) {
-		v.y -= 15;
+		v.y -= 8 * controls.enginePower;
 	}
 
 	shipBody.applyForce(shipBody.transform.times(v));
@@ -83,4 +83,29 @@ export function castLazers(solver, gunAimData) {
 	});
 
 	return result;
+}
+
+export const powerLimits = {
+	total: 6,
+	individual: 4,
+};
+
+export function controlPower({enginePower, shieldPower, gunPower, mapPower}) {
+	// enforce total power limit
+	let remaining = powerLimits.total;
+	function clampPower(value) {
+		const result = clamp(value, 0, Math.min(remaining, powerLimits.individual));
+		remaining -= result;
+		return result;
+	}
+
+	// this clamping does prioritize some values over others, but the client code should
+	// enforce these limits at the frontend. This clamping code is intended to prevent
+	// cheating by tampering with client code, or otherwise sending handcrafted packets.
+	return {
+		enginePower: clampPower(enginePower),
+		shieldPower: clampPower(shieldPower),
+		gunPower: clampPower(gunPower),
+		mapPower: clampPower(mapPower),
+	};
 }

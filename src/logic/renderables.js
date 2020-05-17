@@ -217,7 +217,8 @@ function makeGunRenderable(renderer, getCurrentShip, x, y, r) {
 		lazer.update(lazerLength);
 	};
 	gun.getChildren = () => {
-		return getCurrentShip().controls.firingLazer ? [lazer] : [];
+		const controls = getCurrentShip().controls;
+		return controls.firingLazer && controls.gunPower !== 0 ? [lazer] : [];
 	};
 
 	return gun;

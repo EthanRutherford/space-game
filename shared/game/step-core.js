@@ -1,6 +1,6 @@
 import {fork} from "boxjs";
 import {physTime} from "./constants";
-import {flyShip, castLazers} from "./actions";
+import {flyShip, castLazers, controlPower} from "./actions";
 import {DebugBox} from "./objects";
 import {Action} from "../serial/actions";
 
@@ -10,6 +10,8 @@ export function stepCore(gameState, actions, frameId, isServer) {
 			Object.assign(gameState.ship.controls, action);
 		} else if (action.type === Action.gunControls) {
 			Object.assign(gameState.ship.controls, action);
+		} else if (action.type === Action.engineerControls) {
+			Object.assign(gameState.ship.controls, controlPower(action));
 		} else if (action.type === Action.debug) {
 			if (gameState.solver.bodyMap[action.body.id] == null) {
 				const body = fork.cloneBody(action.body);
@@ -35,7 +37,7 @@ export function postStepCore(gameState, isServer) {
 		gunAimData: gameState.ship.getGunAimData(),
 	};
 
-	if (gameState.ship.controls.firingLazer) {
+	if (gameState.ship.controls.firingLazer && gameState.ship.controls.gunPower !== 0) {
 		results.lazerCastResult = castLazers(gameState.solver, results.gunAimData);
 	}
 

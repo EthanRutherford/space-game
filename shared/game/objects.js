@@ -2,8 +2,21 @@ import {Math as VectorMath, Body, Shapes} from "boxjs";
 const {Vector2D, Rotation} = VectorMath;
 const {Polygon, Circle} = Shapes;
 
+const defaultControls = {
+	forward: false,
+	backward: false,
+	left: false,
+	right: false,
+	aim: new Vector2D(0, 2),
+	firingLazer: false,
+	enginePower: 1,
+	shieldPower: 1,
+	gunPower: 1,
+	mapPower: 1,
+};
+
 export class Ship {
-	constructor(body, hp = 100, controls = {aim: new Vector2D(0, 2)}) {
+	constructor(body, hp = 100, controls = defaultControls) {
 		this.body = body;
 		this.hp = hp;
 		this.controls = controls;

@@ -38,7 +38,7 @@ export function Pilot({userId}) {
 			controls.forward = controls.backward = controls.left = controls.right = false;
 		}
 
-		game.current.postSolve = (frameId) => {
+		function postSolve(frameId) {
 			const action = {
 				type: Action.flightControls,
 				frameId,
@@ -47,12 +47,14 @@ export function Pilot({userId}) {
 
 			game.current.addAction(action);
 			dataChannel.sendAction(action);
-		};
+		}
 
+		game.current.addPostSolveHandler(postSolve);
 		window.addEventListener("keydown", keyDown);
 		window.addEventListener("keyup", keyUp);
 		window.addEventListener("blur", blur);
 		return () => {
+			game.current.removePostSolveHandler(postSolve);
 			window.removeEventListener("keydown", keyDown);
 			window.removeEventListener("keyup", keyUp);
 			window.removeEventListener("blur", blur);

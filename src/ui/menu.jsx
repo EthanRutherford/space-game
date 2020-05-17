@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from "react";
 import {roleNames} from "Shared/game/roles";
 import {spritesPromise} from "../logic/renderables";
-import {AnimatedInput} from "./animated-input";
+import {AnimatedInput} from "./inputs/animated-input";
 import styles from "../styles/menu";
 
 export function Menu({startGame, userManager}) {

@@ -1,113 +1,136 @@
-import React, {useRef, useEffect} from "react";
-import {Math as VectorMath} from "boxjs";
-import {physFPS} from "Shared/game/constants";
+import React, {useState, useEffect, useRef, useCallback} from "react";
+import {Action} from "Shared/serial";
+import {powerLimits} from "Shared/game/actions";
+import {dataChannel} from "../../logic/data-channel";
+import {SteppedSlider} from "../inputs/stepped-slider";
 import {useGame} from "./use-game";
+import {useMap} from "./use-map";
 import {Viewport} from "./viewport";
 import styles from "../../styles/engineer";
-const {Vector2D, Rotation} = VectorMath;
 
-// (360 deg) / (10s * stepsPerSec)
-const lidarStepSize = (Math.PI * 2) / (10 * physFPS);
-const rayCount = 25;
+function doPowerUpdate(game, power) {
+	const action = {
+		type: Action.engineerControls,
+		frameId: game.current.frameId,
+		enginePower: power.engine,
+		shieldPower: power.shield,
+		gunPower: power.gun,
+		mapPower: power.map,
+	};
+
+	game.current.addAction(action);
+	dataChannel.sendAction(action);
+
+	return power;
+}
+function usePower(game) {
+	const currentPower = useRef();
+	const [power, setPower] = useState({
+		engine: 0,
+		shield: 0,
+		gun: 0,
+		map: 0,
+	});
+
+	currentPower.current = power;
+	useEffect(() => {
+		function postSolve() {
+			const gameState = game.current.getGameState();
+			const controls = gameState.ship.controls;
+			if (
+				controls.enginePower !== currentPower.engine ||
+				controls.shieldPower !== currentPower.shield ||
+				controls.gunPower !== currentPower.gun ||
+				controls.mapPower !== currentPower.map
+			) {
+				setPower({
+					engine: controls.enginePower,
+					shield: controls.shieldPower,
+					gun: controls.gunPower,
+					map: controls.mapPower,
+				});
+			}
+		}
+
+		game.current.addPostSolveHandler(postSolve);
+		return () => game.current.removePostSolveHandler(postSolve);
+	}, []);
+
+	return {
+		power,
+		remaining: powerLimits.total - (power.engine + power.shield + power.gun + power.map),
+		set: {
+			engine: useCallback((val) => setPower(
+				(prev) => doPowerUpdate(game, {...prev, engine: val}),
+			), []),
+			shield: useCallback((val) => setPower(
+				(prev) => doPowerUpdate(game, {...prev, shield: val}),
+			), []),
+			gun: useCallback((val) => setPower(
+				(prev) => doPowerUpdate(game, {...prev, gun: val}),
+			), []),
+			map: useCallback((val) => setPower(
+				(prev) => doPowerUpdate(game, {...prev, map: val}),
+			), []),
+		},
+	};
+}
+
+function PowerSlider({value, onChange, remaining, label}) {
+	return (
+		<div className={styles.sliderContainer}>
+			<SteppedSlider
+				trackClass={styles.track}
+				thumbClass={styles.thumb}
+				stopClass={styles.stop}
+				steps={powerLimits.individual}
+				value={value}
+				limit={remaining + value}
+				onChange={onChange}
+			/>
+			<div className={styles.sliderLabel}>
+				{label}
+			</div>
+		</div>
+	);
+}
 
 export function Engineer({userId}) {
 	const {game, canvas} = useGame(userId);
-	const mapCanvas = useRef();
-
-	useEffect(() => {
-		function resize() {
-			const width = mapCanvas.current.clientWidth;
-			const height = mapCanvas.current.clientHeight;
-
-			if (height !== mapCanvas.current.height || width !== mapCanvas.current.width) {
-				mapCanvas.current.width = width;
-				mapCanvas.current.height = height;
-			}
-
-			return {width, height};
-		}
-
-		const context = mapCanvas.current.getContext("2d");
-		let counter = 0;
-		game.current.postSolve = () => {
-			// fade last image
-			const size = resize();
-			const image = context.getImageData(0, 0, size.width, size.height);
-			for (let i = 0; i < image.data.length; i += 4) {
-				image.data[i + 3] -= 1;
-			}
-
-			context.putImageData(image, 0, 0);
-
-			// raycasts
-			const gameState = game.current.getGameState();
-			const p1 = gameState.ship.body.position;
-			const radians = counter++ * -lidarStepSize;
-			const stepRad = (1 / rayCount) * -lidarStepSize;
-
-			const castResults = [];
-			for (let i = 0; i < rayCount; i++) {
-				const r = new Rotation(radians + stepRad * i);
-				const p2 = r.mul(new Vector2D(0, 5000)).add(p1);
-
-				let frac = null;
-				gameState.solver.raycast({
-					p1, p2,
-					callback(castData) {
-						frac = castData.fraction;
-					},
-				});
-
-				const hit = frac != null;
-				const length = 5000 * (hit ? frac : 1);
-				const contact = hit ? r.mul(new Vector2D(0, length)) : null;
-				castResults.push({length, contact, radians: r.radians});
-			}
-
-			// paint
-			const scale = Math.max(size.width, size.height) / 10000;
-			const oX = size.width / 2;
-			const oY = size.height / 2;
-
-			// draw beam
-			context.fillStyle = "#ddffdd20";
-			context.beginPath();
-			context.moveTo(oX, oY);
-			for (const result of castResults) {
-				const startAngle = (-Math.PI / 2) - result.radians;
-				const endAngle = startAngle - stepRad;
-				const length = result.length * scale;
-				context.arc(oX, oY, length, startAngle, endAngle);
-			}
-
-			context.closePath();
-			context.fill();
-
-			// draw center
-			context.fillStyle = "#ffffff";
-			context.beginPath();
-			context.arc(oX, oY, 2, 0, Math.PI * 2, true);
-			context.closePath();
-			context.fill();
-
-			// draw points
-			for (const result of castResults) {
-				if (result.contact != null) {
-					const eX = oX + result.contact.x * scale;
-					const eY = oY - result.contact.y * scale;
-					context.fillStyle = "#ddffdd";
-					context.beginPath();
-					context.arc(eX, eY, 2, 0, Math.PI * 2, true);
-					context.closePath();
-					context.fill();
-				}
-			}
-		};
-	}, []);
+	const mapCanvas = useMap(game);
+	const {power, remaining, set} = usePower(game);
 
 	return (
 		<div className={styles.container}>
-			<div className={styles.sidebar}>Engineer controls would go here</div>
+			<div className={styles.sidebar}>
+				<h1>Power stuff YEEEEEEEEEEEEEEEEEEEAHHHHHHHHHHHH!!!!!!!!!!!</h1>
+				<div className={styles.sliderPanel}>
+					<PowerSlider
+						value={power.engine}
+						onChange={set.engine}
+						remaining={remaining}
+						label="ENGINE"
+					/>
+					<PowerSlider
+						value={power.shield}
+						onChange={set.shield}
+						remaining={remaining}
+						label="SHIELD"
+					/>
+					<PowerSlider
+						value={power.gun}
+						onChange={set.gun}
+						remaining={remaining}
+						label="GUN"
+					/>
+					<PowerSlider
+						value={power.map}
+						onChange={set.map}
+						remaining={remaining}
+						label="MAP"
+					/>
+				</div>
+			</div>
 			<Viewport className={styles.view} game={game} canvas={canvas} />
 			<canvas className={styles.map} ref={mapCanvas} />
 		</div>

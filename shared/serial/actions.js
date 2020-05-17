@@ -59,7 +59,29 @@ const GunControlsAction = {
 	parse: (state, action) => Object.assign(action, GunControls.parse(state)),
 };
 
-const ACTION_MAP = [FlightControlsAction, GunControlsAction];
+export const EngineerControls = {
+	bytify: (state, action) => {
+		Uint8.bytify(state, action.enginePower);
+		Uint8.bytify(state, action.shieldPower);
+		Uint8.bytify(state, action.gunPower);
+		Uint8.bytify(state, action.mapPower);
+	},
+	parse: (state) => {
+		return {
+			enginePower: Uint8.parse(state),
+			shieldPower: Uint8.parse(state),
+			gunPower: Uint8.parse(state),
+			mapPower: Uint8.parse(state),
+		};
+	},
+};
+
+const EngineerControlsAction = {
+	bytify: EngineerControls.bytify,
+	parse: (state, action) => Object.assign(action, EngineerControls.parse(state)),
+};
+
+const ACTION_MAP = [FlightControlsAction, GunControlsAction, EngineerControlsAction];
 ACTION_MAP[255] = Debug;
 ACTION_MAP.forEach((kind, index) => kind.ID = index);
 
@@ -80,5 +102,6 @@ export const Action = {
 	},
 	flightControls: FlightControlsAction.ID,
 	gunControls: GunControlsAction.ID,
+	engineerControls: EngineerControlsAction.ID,
 	debug: Debug.ID,
 };

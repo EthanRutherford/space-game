@@ -40,7 +40,7 @@ export function Gunner({userId}) {
 			controls.changed = true;
 		}
 
-		game.current.postSolve = (frameId) => {
+		function postSolve(frameId) {
 			if (controls.changed) {
 				if (controls.aimDirty) {
 					controls.aim = Vector2D.clone(game.current.renderer.viewportToWorld(
@@ -64,8 +64,9 @@ export function Gunner({userId}) {
 
 				controls.changed = false;
 			}
-		};
+		}
 
+		game.current.addPostSolveHandler(postSolve);
 		window.addEventListener("mousedown", mouseDown);
 		window.addEventListener("mouseup", mouseUp);
 		window.addEventListener("mousemove", mouseMove);
@@ -76,6 +77,7 @@ export function Gunner({userId}) {
 		});
 
 		return () => {
+			game.current.removePostSolveHandler(postSolve);
 			window.removeEventListener("mousedown", mouseDown);
 			window.removeEventListener("mouseup", mouseUp);
 			window.removeEventListener("mousemove", mouseMove);

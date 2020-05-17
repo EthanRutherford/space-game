@@ -1,0 +1,21 @@
+@import "./variables.css";
+
+.track {
+	position: relative;
+	cursor: pointer;
+}
+
+.thumb, .stop {
+	position: absolute;
+	left: 50%;
+	transform: translate(-50%, 50%);
+	cursor: pointer;
+}
+
+.thumb {
+	z-index: 1;
+}
+
+.not-sliding {
+	transition: bottom 100ms;
+}

@@ -3,7 +3,6 @@ import {Math as VectorMath, Solver, AABB} from "boxjs";
 import {physTimeMs} from "Shared/game/constants";
 import {stepCore, postStepCore} from "Shared/game/step-core";
 import {GameState} from "Shared/game/game-state";
-import {castLazers} from "Shared/game/actions";
 import {Ship, Asteroid, DebugBox} from "Shared/game/objects";
 import {Action} from "Shared/serial";
 import {SpaceBgShader} from "../logic/background-shader";
@@ -16,7 +15,9 @@ const {cleanAngle} = VectorMath;
 export class Game {
 	constructor(canvas, userId) {
 		this.userId = userId;
+		this.postSolveHandlers = new Set();
 
+		// initialize solver data
 		const solver = new Solver();
 		const shipBody = Ship.createBody();
 		const ship = new Ship(shipBody);
@@ -288,8 +289,8 @@ export class Game {
 		this.frameId = frameId;
 
 		// post solve
-		if (this.postSolve) {
-			this.postSolve(this.frameId);
+		for (const handler of this.postSolveHandlers) {
+			handler(this.frameId);
 		}
 	}
 	updateGameTime(time, timeStamp) {
@@ -326,5 +327,11 @@ export class Game {
 	}
 	getGameState() {
 		return this.frameBuffer[0];
+	}
+	addPostSolveHandler(handler) {
+		this.postSolveHandlers.add(handler);
+	}
+	removePostSolveHandler(handler) {
+		this.postSolveHandlers.delete(handler);
 	}
 }
