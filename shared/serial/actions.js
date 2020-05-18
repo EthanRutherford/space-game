@@ -38,7 +38,7 @@ export const GunControls = {
 	},
 };
 
-export const EngineerControls = {
+export const PowerControls = {
 	bytify: (state, action) => {
 		Uint8.bytify(state, action.enginePower);
 		Uint8.bytify(state, action.shieldPower);
@@ -91,6 +91,6 @@ export const Action = {
 	},
 	flightControls: makeAction(FlightControls),
 	gunControls: makeAction(GunControls),
-	engineerControls: makeAction(EngineerControls),
+	powerControls: makeAction(PowerControls),
 	debug: makeAction(Debug),
 };

@@ -1,77 +1,45 @@
-import React, {useState, useEffect, useRef, useCallback} from "react";
+import React, {useRef, useCallback} from "react";
 import {Action} from "Shared/serial";
 import {powerLimits} from "Shared/game/actions";
 import {dataChannel} from "../../logic/data-channel";
 import {SteppedSlider} from "../inputs/stepped-slider";
-import {useGame} from "./use-game";
+import {useGame, useDerived} from "./use-game";
 import {useMap} from "./use-map";
 import {Viewport} from "./viewport";
 import styles from "../../styles/engineer";
 
-function doPowerUpdate(game, power) {
-	const action = {
-		type: Action.engineerControls,
-		frameId: game.current.frameId,
-		enginePower: power.engine,
-		shieldPower: power.shield,
-		gunPower: power.gun,
-		mapPower: power.map,
+function usePower(game) {
+	const updatePower = useRef();
+	const power = {
+		engine: useDerived(game, (state) => state.ship.controls.enginePower),
+		shield: useDerived(game, (state) => state.ship.controls.shieldPower),
+		gun: useDerived(game, (state) => state.ship.controls.gunPower),
+		map: useDerived(game, (state) => state.ship.controls.mapPower),
 	};
 
-	game.current.addAction(action);
-	dataChannel.sendAction(action);
+	updatePower.current = (key, value) => {
+		const action = {
+			type: Action.powerControls,
+			frameId: game.current.frameId,
+			enginePower: power.engine,
+			shieldPower: power.shield,
+			gunPower: power.gun,
+			mapPower: power.map,
+			[key]: value,
+		};
 
-	return power;
-}
-function usePower(game) {
-	const currentPower = useRef();
-	const [power, setPower] = useState({
-		engine: 0,
-		shield: 0,
-		gun: 0,
-		map: 0,
-	});
-
-	currentPower.current = power;
-	useEffect(() => {
-		function postSolve() {
-			const gameState = game.current.getGameState();
-			const controls = gameState.ship.controls;
-			if (
-				controls.enginePower !== currentPower.engine ||
-				controls.shieldPower !== currentPower.shield ||
-				controls.gunPower !== currentPower.gun ||
-				controls.mapPower !== currentPower.map
-			) {
-				setPower({
-					engine: controls.enginePower,
-					shield: controls.shieldPower,
-					gun: controls.gunPower,
-					map: controls.mapPower,
-				});
-			}
-		}
-
-		game.current.addPostSolveHandler(postSolve);
-		return () => game.current.removePostSolveHandler(postSolve);
-	}, []);
+		game.current.addAction(action);
+		dataChannel.sendAction(action);
+	};
 
 	return {
 		power,
 		remaining: powerLimits.total - (power.engine + power.shield + power.gun + power.map),
 		set: {
-			engine: useCallback((val) => setPower(
-				(prev) => doPowerUpdate(game, {...prev, engine: val}),
-			), []),
-			shield: useCallback((val) => setPower(
-				(prev) => doPowerUpdate(game, {...prev, shield: val}),
-			), []),
-			gun: useCallback((val) => setPower(
-				(prev) => doPowerUpdate(game, {...prev, gun: val}),
-			), []),
-			map: useCallback((val) => setPower(
-				(prev) => doPowerUpdate(game, {...prev, map: val}),
-			), []),
+			engine: useCallback((v) => updatePower.current("enginePower", v), []),
+			shield: useCallback((v) => updatePower.current("shieldPower", v), []),
+			gun: useCallback((v) => updatePower.current("gunPower", v), []),
+			map: useCallback((v) => updatePower.current("mapPower", v), []),
 		},
 	};
 }

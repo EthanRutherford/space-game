@@ -1,4 +1,4 @@
-import {useRef, useEffect} from "react";
+import {useState, useRef, useEffect} from "react";
 import {Timing, Sync} from "Shared/serial";
 import {Game} from "../../logic/game";
 import {dataChannel} from "../../logic/data-channel";
@@ -21,4 +21,19 @@ export function useGame(userId) {
 	}, []);
 
 	return {game, canvas};
+}
+
+export function useDerived(game, getValue) {
+	const [value, setValue] = useState();
+
+	useEffect(() => {
+		const postSolve = () => {
+			setValue(getValue(game.current.getGameState()));
+		};
+
+		game.current.addPostSolveHandler(postSolve);
+		return () => game.current.removePostSolveHandler(postSolve);
+	}, []);
+
+	return value;
 }

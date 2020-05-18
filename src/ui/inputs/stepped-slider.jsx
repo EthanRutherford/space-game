@@ -26,12 +26,14 @@ export function SteppedSlider({
 }) {
 	const safeLimit = limit == null ? steps : clamp(limit, 0, steps);
 	const isClicked = useRef(false);
+	const timeout = useRef(null);
 	const trackRef = useRef();
 	const [slideState, setSlideState] = useState(null);
 
 	const onMouseDown = useCallback((event) => {
 		setSlideState(eventToPos(event, trackRef.current, steps, safeLimit));
 		isClicked.current = true;
+		clearTimeout(timeout.current);
 	}, [steps, safeLimit]);
 
 	useEffect(() => {
@@ -45,10 +47,14 @@ export function SteppedSlider({
 		const onMouseUp = () => {
 			if (isClicked.current) {
 				isClicked.current = false;
-				setSlideState(null);
-				onChange(Math.round(
-					eventToPos(event, trackRef.current, steps, safeLimit) * steps,
-				));
+				const pos = eventToPos(event, trackRef.current, steps, safeLimit);
+				const value = Math.round(pos * steps);
+				onChange(value);
+				setSlideState(value / steps);
+
+				// delay resetting to uncontrolled
+				// the consumer doesn't update state right away
+				timeout.current = setTimeout(() => setSlideState(null), 50);
 			}
 		};
 
@@ -61,13 +67,14 @@ export function SteppedSlider({
 	}, [steps, safeLimit]);
 
 	const pos = slideState != null ? slideState : value / steps;
+	const slideClass = isClicked.current ? "" : styles.notSliding;
 	return (
 		<div
 			className={`${styles.track} ${trackClass}`}
 			onMouseDown={onMouseDown} ref={trackRef}
 		>
 			<div
-				className={`${styles.thumb} ${slideState == null ? styles.notSliding : ""} ${thumbClass}`}
+				className={`${styles.thumb} ${slideClass} ${thumbClass}`}
 				style={{bottom: `${pos * 100}%`}}
 			/>
 			{new Array(steps + 1).fill(0).map((_, i) => (

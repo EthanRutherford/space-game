@@ -57,7 +57,7 @@ function stepCore(gameState, actions, frameId) {
 			Object.assign(gameState.ship.controls, action);
 		} else if (action.type === Action.gunControls) {
 			Object.assign(gameState.ship.controls, action);
-		} else if (action.type === Action.engineerControls) {
+		} else if (action.type === Action.powerControls) {
 			Object.assign(gameState.ship.controls, controlPower(action));
 		} else if (action.type === Action.debug) {
 			if (gameState.solver.bodyMap[action.body.id] == null) {

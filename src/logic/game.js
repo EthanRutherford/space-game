@@ -1,3 +1,4 @@
+import {unstable_batchedUpdates as batchedUpdates} from "react-dom";
 import {Renderer, Scene, rgba, builtIn, shaders} from "2d-gl";
 import {Math as VectorMath, AABB} from "boxjs";
 import {physTimeMs} from "Shared/game/constants";
@@ -261,9 +262,11 @@ export class Game {
 		this.frameId++;
 
 		// post solve
-		for (const handler of this.postSolveHandlers) {
-			handler(this.frameId);
-		}
+		batchedUpdates(() => {
+			for (const handler of this.postSolveHandlers) {
+				handler(this.frameId);
+			}
+		});
 	}
 	updateGameTime(time, timeStamp) {
 		// the server sends the current server game time, already
