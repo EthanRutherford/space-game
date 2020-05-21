@@ -1,22 +1,19 @@
-import {Bools, Uint8, Uint32} from "./primitives";
+import {Bool, Uint8, Uint32} from "./primitives";
 import {Vector} from "./vector";
 
 export const FlightControls = {
 	bytify: (state, action) => {
-		Bools.bytify(state, [
-			action.forward,
-			action.backward,
-			action.left,
-			action.right,
-		], 4);
+		Bool.bytify(state, action.forward);
+		Bool.bytify(state, action.backward);
+		Bool.bytify(state, action.left);
+		Bool.bytify(state, action.right);
 	},
 	parse: (state) => {
-		const bools = Bools.parse(state, 4);
 		return {
-			forward: bools[0],
-			backward: bools[1],
-			left: bools[2],
-			right: bools[3],
+			forward: Bool.parse(state),
+			backward: Bool.parse(state),
+			left: Bool.parse(state),
+			right: Bool.parse(state),
 		};
 	},
 };
@@ -24,16 +21,12 @@ export const FlightControls = {
 export const GunControls = {
 	bytify: (state, action) => {
 		Vector.bytify(state, action.aim);
-		Bools.bytify(state, [
-			action.firingLazer,
-		], 1);
+		Bool.bytify(state, action.firingLazer);
 	},
 	parse: (state) => {
-		const aim = Vector.parse(state);
-		const bools = Bools.parse(state, 1);
 		return {
-			aim,
-			firingLazer: bools[0],
+			aim: Vector.parse(state),
+			firingLazer: Bool.parse(state),
 		};
 	},
 };

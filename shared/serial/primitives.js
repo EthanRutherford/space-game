@@ -1,45 +1,24 @@
-// a Bool is a bit of a last-resort, it uses a full 8 bits to transmit a single bit value
+// Bool will cleverly pack bits into bytes. When the first bool is written,
+// the location is tracked, and further bools will be packed into that same byte
+// until it's full. Reading bools operates the same way in reverse.
 export const Bool = {
 	bytify: (state, value) => {
-		state.dataView.setUint8(state.index++, value);
+		if (!(state.bitOffset < 8)) {
+			state.bitMask = 0;
+			state.bitOffset = 0;
+			state.bitIndex = state.index++;
+		}
+
+		state.bitMask |= (value ? 1 : 0) << state.bitOffset++;
+		state.dataView.setUint8(state.bitIndex, state.bitMask);
 	},
 	parse: (state) => {
-		return !!state.dataView.getUint8(state.index++);
-	},
-};
-
-// Bools, in comparison, will pack an array of bits into as few bytes as possible
-export const Bools = {
-	bytify: (state, values, count) => {
-		const uint8Count = Math.ceil(count / 8);
-		for (let i = 0; i < uint8Count; i++) {
-			let bitmask = 0;
-
-			const offset = i * 8;
-			for (let j = 0; offset + j < count; j++) {
-				if (values[offset + j]) {
-					bitmask |= 1 << j;
-				}
-			}
-
-			state.dataView.setUint8(state.index++, bitmask);
-		}
-	},
-	parse: (state, count) => {
-		const uint8Count = Math.ceil(count / 8);
-		const values = [];
-
-		for (let i = 0; i < uint8Count; i++) {
-			let field = state.dataView.getUint8(state.index++);
-
-			const offset = i * 8;
-			for (let j = offset; j < count; j++) {
-				values.push(!!(field & 1));
-				field >>= 1;
-			}
+		if (!(state.bitOffset < 8)) {
+			state.bitOffset = 0;
+			state.bitMask = state.dataView.getUint8(state.index++);
 		}
 
-		return values;
+		return !!(state.bitMask & (1 << state.bitOffset++));
 	},
 };
 
