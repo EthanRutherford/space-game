@@ -6,6 +6,41 @@
 	height: 100%;
 }
 
+.hud {
+	position: absolute;
+	left: 10px;
+	top: 10px;
+	border-radius: 5px;
+	width: 268px;
+	padding: 10px;
+	background-color: #ffffff33;
+}
+
+.hud-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+}
+
+.stat-bar {
+	border-radius: 2px;
+	height: 10px;
+	width: 200px;
+	background-color: #ffffff11;
+	overflow: hidden;
+}
+.hp-fill, .eng-fill {
+	width: 0;
+	height: 100%;
+}
+.hp-fill {
+	background-color: green;
+}
+.eng-fill {
+	background-color: red;
+}
+
 .compass {
 	position: absolute;
 	right: 10px;

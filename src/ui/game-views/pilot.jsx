@@ -7,6 +7,8 @@ import styles from "../../styles/pilot.css";
 
 export function Pilot({userId}) {
 	const {game, canvas} = useGame(userId);
+	const hp = useDerived(game, (state) => state.ship.hp);
+	const eng = useDerived(game, (state) => state.ship.controls.enginePower * 25);
 	const waypoint = useDerived(game, (state) => {
 		if (state.ship.controls.waypoint == null) {
 			return null;
@@ -74,6 +76,20 @@ export function Pilot({userId}) {
 
 	return (
 		<div className={styles.container}>
+			<div className={styles.hud}>
+				<div className={styles.hudRow}>
+					HP
+					<div className={styles.statBar}>
+						<div className={styles.hpFill} style={{width: `${hp}%`}} />
+					</div>
+				</div>
+				<div className={styles.hudRow}>
+					ENG
+					<div className={styles.statBar}>
+						<div className={styles.engFill} style={{width: `${eng}%`}} />
+					</div>
+				</div>
+			</div>
 			<div className={styles.compass}>
 				{waypoint != null && (
 					<>
