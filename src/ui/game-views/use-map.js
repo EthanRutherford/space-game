@@ -6,28 +6,44 @@ const {Vector2D, Rotation} = VectorMath;
 // (360 deg) / (10s * stepsPerSec)
 const lidarStepSize = (Math.PI * 2) / (10 * physFPS);
 const rayCount = 25;
+const getScale = (size) => Math.max(size.width, size.height) / 10000;
+function resize(canvas) {
+	const width = canvas.clientWidth;
+	const height = canvas.clientHeight;
+
+	if (height !== canvas.height || width !== canvas.width) {
+		canvas.width = width;
+		canvas.height = height;
+	}
+
+	return {width, height};
+}
+
+export function toGameCoords(canvas, state, event) {
+	const x = event.nativeEvent.offsetX;
+	const y = event.nativeEvent.offsetY;
+
+	const size = resize(canvas);
+	const scale = getScale(size);
+	const oX = size.width / 2;
+	const oY = size.height / 2;
+
+	const offX = (x - oX) / scale;
+	const offY = (oY - y) / scale;
+
+	const shipPos = state.ship.body.position;
+	return new Vector2D(shipPos.x + offX, shipPos.y + offY);
+}
 
 export function useMap(game) {
 	const canvas = useRef();
 
 	useEffect(() => {
-		function resize() {
-			const width = canvas.current.clientWidth;
-			const height = canvas.current.clientHeight;
-
-			if (height !== canvas.current.height || width !== canvas.current.width) {
-				canvas.current.width = width;
-				canvas.current.height = height;
-			}
-
-			return {width, height};
-		}
-
 		const context = canvas.current.getContext("2d");
 		let counter = 0;
 		function postSolve() {
 			// fade last image
-			const size = resize();
+			const size = resize(canvas.current);
 			const image = context.getImageData(0, 0, size.width, size.height);
 			for (let i = 0; i < image.data.length; i += 4) {
 				image.data[i + 3] -= 1;
@@ -67,7 +83,7 @@ export function useMap(game) {
 			}
 
 			// paint
-			const scale = Math.max(size.width, size.height) / 10000;
+			const scale = getScale(size);
 			const oX = size.width / 2;
 			const oY = size.height / 2;
 
@@ -103,6 +119,20 @@ export function useMap(game) {
 					context.closePath();
 					context.fill();
 				}
+			}
+
+			// draw waypoint
+			if (gameState.ship.controls.waypoint != null) {
+				const waypoint = gameState.ship.controls.waypoint;
+				const position = gameState.ship.body.position;
+				const relativePos = waypoint.minus(position);
+				const eX = oX + relativePos.x * scale;
+				const eY = oY - relativePos.y * scale;
+				context.fillStyle = "#5588ff";
+				context.beginPath();
+				context.arc(eX, eY, 2, 0, Math.PI * 2, true);
+				context.closePath();
+				context.fill();
 			}
 		}
 

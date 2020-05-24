@@ -1,6 +1,6 @@
 import {Uint8, Uint32, Float} from "./primitives";
 import {BodyState} from "./body-state";
-import {FlightControls, GunControls, PowerControls} from "./actions";
+import {FlightControls, GunControls, PowerControls, WaypointControls} from "./actions";
 
 export const Ship = {
 	bytify: (state, ship) => {
@@ -9,6 +9,7 @@ export const Ship = {
 		FlightControls.bytify(state, ship.controls);
 		GunControls.bytify(state, ship.controls);
 		PowerControls.bytify(state, ship.controls);
+		WaypointControls.bytify(state, ship.controls);
 	},
 	parse: (state) => {
 		return {
@@ -18,6 +19,7 @@ export const Ship = {
 				...FlightControls.parse(state),
 				...GunControls.parse(state),
 				...PowerControls.parse(state),
+				...WaypointControls.parse(state),
 			},
 		};
 	},

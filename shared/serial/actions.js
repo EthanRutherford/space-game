@@ -1,4 +1,4 @@
-import {Bool, Uint8, Uint32} from "./primitives";
+import {Bool, Uint8, Uint32, nullable} from "./primitives";
 import {Vector} from "./vector";
 
 export const FlightControls = {
@@ -48,6 +48,17 @@ export const PowerControls = {
 	},
 };
 
+export const WaypointControls = {
+	bytify: (state, action) => {
+		nullable(Vector).bytify(state, action.waypoint);
+	},
+	parse: (state) => {
+		return {
+			waypoint: nullable(Vector).parse(state),
+		};
+	},
+};
+
 const Debug = {
 	bytify: (state, action) => {
 		Vector.bytify(state, action.position);
@@ -85,5 +96,6 @@ export const Action = {
 	flightControls: makeAction(FlightControls),
 	gunControls: makeAction(GunControls),
 	powerControls: makeAction(PowerControls),
+	waypointControls: makeAction(WaypointControls),
 	debug: makeAction(Debug),
 };

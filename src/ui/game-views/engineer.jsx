@@ -4,7 +4,7 @@ import {powerLimits} from "Shared/game/actions";
 import {dataChannel} from "../../logic/data-channel";
 import {SteppedSlider} from "../inputs/stepped-slider";
 import {useGame, useDerived} from "./use-game";
-import {useMap} from "./use-map";
+import {useMap, toGameCoords} from "./use-map";
 import {Viewport} from "./viewport";
 import styles from "../../styles/engineer";
 
@@ -68,6 +68,22 @@ export function Engineer({userId}) {
 	const mapCanvas = useMap(game);
 	const {power, remaining, set} = usePower(game);
 
+	const onClick = useCallback((event) => {
+		event.preventDefault();
+		const action = {
+			type: Action.waypointControls,
+			frameId: game.current.frameId,
+		};
+
+		if (event.button === 0) {
+			const state = game.current.getGameState();
+			action.waypoint = toGameCoords(mapCanvas.current, state, event);
+		}
+
+		game.current.addAction(action);
+		dataChannel.sendAction(action);
+	}, []);
+
 	return (
 		<div className={styles.container}>
 			<div className={styles.sidebar}>
@@ -100,7 +116,12 @@ export function Engineer({userId}) {
 				</div>
 			</div>
 			<Viewport className={styles.view} game={game} canvas={canvas} />
-			<canvas className={styles.map} ref={mapCanvas} />
+			<canvas
+				className={styles.map}
+				onClick={onClick}
+				onContextMenu={onClick}
+				ref={mapCanvas}
+			/>
 		</div>
 	);
 }

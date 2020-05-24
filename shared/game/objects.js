@@ -13,6 +13,7 @@ const defaultControls = {
 	shieldPower: 1,
 	gunPower: 1,
 	mapPower: 1,
+	waypoint: null,
 };
 
 export class Ship {

@@ -111,3 +111,19 @@ export const Double = {
 		return result;
 	},
 };
+
+export function nullable(Type) {
+	return {
+		bytify: (state, value) => {
+			const isSet = value != null;
+			Bool.bytify(state, isSet);
+			if (isSet) {
+				Type.bytify(state, value);
+			}
+		},
+		parse: (state) => {
+			const isSet = Bool.parse(state);
+			return isSet ? Type.parse(state) : null;
+		},
+	};
+}
