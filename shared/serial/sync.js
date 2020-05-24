@@ -1,20 +1,20 @@
 import {Uint32} from "./primitives";
-import {Ship, DebugBox, Asteroid} from "./objects";
-import {TypedArray} from "./typed-array";
+import {Ship, Asteroid, DebugBox} from "./objects";
+import {TypedMap} from "./typed-map";
 
 export const Sync = {
 	bytify: (state, frameId, sync) => {
 		Uint32.bytify(state, frameId);
 		Ship.bytify(state, sync.ship);
-		TypedArray.bytify(state, Asteroid, sync.asteroids);
-		TypedArray.bytify(state, DebugBox, sync.debugBoxes);
+		TypedMap.bytify(state, Uint32, Asteroid, sync.asteroids);
+		TypedMap.bytify(state, Uint32, DebugBox, sync.debugBoxes);
 	},
 	parse: (state) => {
 		return {
 			frameId: Uint32.parse(state),
 			ship: Ship.parse(state),
-			asteroids: TypedArray.parse(state, Asteroid),
-			debugBoxes: TypedArray.parse(state, DebugBox),
+			asteroids: TypedMap.parse(state, Uint32, Asteroid),
+			debugBoxes: TypedMap.parse(state, Uint32, DebugBox),
 		};
 	},
 };

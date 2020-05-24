@@ -3,7 +3,7 @@ import {Renderer, Scene, rgba, builtIn, shaders} from "2d-gl";
 import {Math as VectorMath, AABB} from "boxjs";
 import {physTimeMs} from "Shared/game/constants";
 import {GameCore} from "Shared/game/game-core";
-import {Asteroid, DebugBox} from "Shared/game/objects";
+import {DebugBox} from "Shared/game/objects";
 import {Action} from "Shared/serial";
 import {SpaceBgShader} from "../logic/background-shader";
 import {vLerp, aLerp} from "../logic/util";
@@ -143,25 +143,25 @@ export class Game {
 		Object.assign(gameState.ship.controls, this.latestSync.ship.controls);
 		updates.push(this.latestSync.ship.body);
 
-		for (const asteroid of this.latestSync.asteroids) {
-			if (this.idMap[asteroid.body.id] == null) {
-				const body = Asteroid.createBody(asteroid.body, asteroid.radius);
+		for (const [id, asteroid] of Object.entries(this.latestSync.asteroids)) {
+			if (this.idMap[id] == null) {
+				const ast = gameState.addAsteroid(asteroid.body, asteroid.radius);
 				const renderable = makeAsteroidRenderable(this.renderer, asteroid.radius);
-				this.addBody(gameState, asteroid.body.id, body, renderable);
+				this.addBody(gameState, asteroid.body.id, ast.body, renderable);
 			} else {
 				updates.push(asteroid.body);
 			}
 		}
 
-		for (const debugBox of this.latestSync.debugBoxes) {
+		for (const [id, debugBox] of Object.entries(this.latestSync.debugBoxes)) {
 			if (debugBox.clientId === this.userId) {
 				this.ackDebugAction(debugBox);
 			}
 
-			if (this.idMap[debugBox.body.id] == null) {
-				const body = DebugBox.createBody(debugBox.body);
+			if (this.idMap[id] == null) {
+				const box = gameState.addDebugBox(debugBox.body);
 				const renderable = makeDebugBoxRenderable(this.renderer);
-				this.addBody(gameState, debugBox.body.id, body, renderable);
+				this.addBody(gameState, debugBox.body.id, box.body, renderable);
 			} else {
 				updates.push(debugBox.body);
 			}

@@ -68,7 +68,7 @@ function stepCore(gameState, actions, frameId) {
 
 				if (IS_SERVER) {
 					const debugBox = new DebugBox(body, action.clientId, frameId);
-					gameState.debugBoxes.push(debugBox);
+					gameState.debugBoxes[body.id] = debugBox;
 				}
 			}
 		}
