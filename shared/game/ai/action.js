@@ -3,10 +3,15 @@ import {Random} from "../../random";
 import {Goals} from "./goal";
 const {Vector2D, Rotation} = VectorMath;
 
-function doWander(goal) {
+function clampVec(v, max) {
+	const length = v.length;
+	return v.length > max ? v.mul(max / length) : v;
+}
+
+function doWander(goal, speed) {
 	goal.angle += Random.float(-.02, .02);
 	const rot = new Rotation(goal.angle);
-	return rot.times(new Vector2D(0, 25));
+	return rot.times(new Vector2D(0, speed));
 }
 
 function doSeek(us, targetPos) {
@@ -66,10 +71,10 @@ function doEvade(us, them) {
 
 const goalToAction = {
 	[Goals.wander](goal) {
-		return doWander(goal);
+		return doWander(goal, 25);
 	},
 	[Goals.investigate](goal, us) {
-		return doSeek(us, goal.target);
+		return clampVec(doSeek(us, goal.target), 25);
 	},
 	[Goals.engage](_, us, them) {
 		return doOffsetPursue(us, them);
