@@ -59,6 +59,8 @@ export class GameCore {
 }
 
 function stepCore(gameState, actions, frameId) {
+	const forked = gameState.fork();
+
 	for (const action of actions) {
 		if (action.type === Action.flightControls) {
 			Object.assign(gameState.ship.controls, action);
@@ -84,9 +86,10 @@ function stepCore(gameState, actions, frameId) {
 	flyShip(gameState.ship.body, gameState.ship.controls);
 	for (const alien of Object.values(gameState.aliens)) {
 		alien.brain.perform(alien);
+		alien.neighbors.length = 0;
+		alien.obstacles.length = 0;
 	}
 
-	const forked = gameState.fork();
 	gameState.solver.solve(physTime);
 
 	return forked;
