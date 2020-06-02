@@ -22,6 +22,13 @@ export class GameCore {
 
 		// apply actions and step forward
 		while (frameId <= targetFrameId) {
+			// process alien ai for current frame only
+			if (frameId === targetFrameId) {
+				for (const alien of Object.values(gameState.aliens)) {
+					alien.brain.compute(alien, gameState.ship, physTime);
+				}
+			}
+
 			const index = targetFrameId - frameId;
 			this.frameBuffer[index] = stepCore(
 				gameState,
@@ -75,6 +82,10 @@ function stepCore(gameState, actions, frameId) {
 	}
 
 	flyShip(gameState.ship.body, gameState.ship.controls);
+	for (const alien of Object.values(gameState.aliens)) {
+		alien.brain.perform(alien);
+	}
+
 	const forked = gameState.fork();
 	gameState.solver.solve(physTime);
 

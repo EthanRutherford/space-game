@@ -25,6 +25,20 @@ export const Ship = {
 	},
 };
 
+// TODO: sync the brain
+export const Alien = {
+	bytify: (state, alien) => {
+		BodyState.bytify(state, alien.body);
+		Uint8.bytify(state, alien.hp);
+	},
+	parse: (state) => {
+		return {
+			body: BodyState.parse(state),
+			hp: Uint8.parse(state),
+		};
+	},
+};
+
 export const Asteroid = {
 	bytify: (state, asteroid) => {
 		BodyState.bytify(state, asteroid.body);

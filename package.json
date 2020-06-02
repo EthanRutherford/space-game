@@ -12,7 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "2d-gl": "^1.7.1",
-    "boxjs": "^1.3.4",
+    "boxjs": "^1.4.0",
     "bufferutil": "^4.0.1",
     "earcut": "^2.2.2",
     "react": "^16.13.0",

@@ -26,6 +26,8 @@ export class Game {
 			gameState.addAsteroid({position, angularVelocity}, radius);
 		}
 
+		gameState.addAlien({position: new Vector2D(100, 100)});
+
 		this.oldestUnprocessedAction = 0;
 		this.postSolve = null;
 
@@ -94,6 +96,7 @@ export class Game {
 		const gameState = this.gameCore.getGameState();
 		return {
 			ship: gameState.ship,
+			aliens: gameState.aliens,
 			asteroids: gameState.asteroids,
 			debugBoxes: gameState.debugBoxes,
 		};

@@ -69,17 +69,21 @@ export function useMap(game) {
 				const p2 = r.mul(new Vector2D(0, 1250 * mapPower)).add(p1);
 
 				let frac = null;
+				let body = null;
 				gameState.solver.raycast({
 					p1, p2,
+					shouldCheck: (shape) => !shape.sensor,
 					callback(castData) {
+						body = castData.shape.body;
 						frac = castData.fraction;
+						return frac;
 					},
 				});
 
 				const hit = frac != null;
 				const length = 1250 * mapPower * (hit ? frac : 1);
 				const contact = hit ? r.mul(new Vector2D(0, length)) : null;
-				castResults.push({length, contact, radians: r.radians});
+				castResults.push({body, length, contact, radians: r.radians});
 			}
 
 			// paint
@@ -113,7 +117,8 @@ export function useMap(game) {
 				if (result.contact != null) {
 					const eX = oX + result.contact.x * scale;
 					const eY = oY - result.contact.y * scale;
-					context.fillStyle = "#ddffdd";
+					const isAlien = gameState.aliens[result.body.id] != null;
+					context.fillStyle = isAlien ? "#ff0000" : "#ddffdd";
 					context.beginPath();
 					context.arc(eX, eY, 2, 0, Math.PI * 2, true);
 					context.closePath();

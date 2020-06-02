@@ -1,4 +1,6 @@
 import {Math as VectorMath, Body, Shapes} from "boxjs";
+import {Brain} from "./ai/brain";
+import {VelocityAlignedJoint} from "./velocity-aligned-joint";
 const {Vector2D, Rotation} = VectorMath;
 const {Polygon, Circle} = Shapes;
 
@@ -21,6 +23,11 @@ export class Ship {
 		this.body = body;
 		this.hp = hp;
 		this.controls = controls;
+		this.body.onCollide = this.onCollide.bind(this);
+	}
+	onCollide(contactData) {
+		if (contactData.otherShape.sensor) return;
+		// TODO: take damage from collisions
 	}
 	getGunAimData() {
 		const {left, right, tip} = Ship.gunOffsets;
@@ -65,6 +72,68 @@ Ship.gunOffsets = {
 	right: new Vector2D(.5, -.5),
 	tip: new Vector2D(0, .35),
 };
+
+export class Alien {
+	constructor(body, sensor, hp = 100, brain = new Brain()) {
+		this.body = body;
+		this.sensor = sensor;
+		this.hp = hp;
+		this.brain = brain;
+
+		this.neighbors = [];
+		this.obstacles = [];
+		this.body.onCollide = this.onCollide.bind(this);
+		this.sensor.onCollide = this.onCollideObstacleSensor.bind(this);
+	}
+	onCollide(contactData) {
+		if (contactData.otherShape.sensor) return;
+		if (contactData.shape === this.body.shapes[0]) {
+			// TODO: take damage from collisions
+		} else if (contactData.shape === this.body.shapes[1]) {
+			this.neighbors.push(contactData.otherShape);
+		}
+	}
+	onCollideObstacleSensor(contactData) {
+		if (contactData.otherShape.sensor) return;
+		this.obstacles.push(contactData.otherShape);
+	}
+	static createBodies({position, angle, velocity, angularVelocity} = {}) {
+		const body = new Body({
+			position, angle,
+			velocity, angularVelocity,
+			filterGroup: 2,
+			exclusionList: [2],
+			shapes: [
+				/* TODO: define more accurate shape(?) */
+				new Circle(1),
+				// neighbor sensor
+				new Circle(20, true),
+			],
+		});
+		const obstacleSensor = new Body({
+			position, angle,
+			velocity, angularVelocity,
+			filterGroup: 2,
+			exclusionList: [2],
+			shapes: [
+				new Polygon(true).set([
+					new Vector2D(-1, 0),
+					new Vector2D(1, 0),
+					new Vector2D(1, 100),
+					new Vector2D(-1, 100),
+				]),
+			],
+		});
+		const sensorJoint = new VelocityAlignedJoint({
+			bodyA: body,
+			bodyB: obstacleSensor,
+			anchorA: new Vector2D(0, 0),
+			anchorB: new Vector2D(0, 0),
+		});
+
+		return [body, obstacleSensor, sensorJoint];
+	}
+}
 
 export class Asteroid {
 	constructor(body, radius) {

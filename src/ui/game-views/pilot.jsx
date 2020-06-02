@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect} from "react";
 import {Action} from "Shared/serial";
 import {dataChannel} from "../../logic/data-channel";
 import {useGame, useDerived} from "./use-game";

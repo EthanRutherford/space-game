@@ -5,6 +5,7 @@ import {Ship} from "Shared/game/objects";
 import {Random} from "Shared/random";
 import shipUrl from "../images/ship.png";
 import gunUrl from "../images/gun.png";
+import alienUrl from "../images/alien.png";
 import asteroidUrl from "../images/asteroid.png";
 const {Shape, VectorMaterial, SpriteMaterial} = builtIn;
 const {Vector2D} = VectorMath;
@@ -16,6 +17,7 @@ const sprites = {};
 const getSprite = (name, url) => spriteLoader.get(name, url).then((x) => sprites[name] = x);
 getSprite("ship", shipUrl);
 getSprite("gun", gunUrl);
+getSprite("alien", alienUrl);
 getSprite("asteroid", asteroidUrl);
 
 function getAlphas(bitmap) {
@@ -258,6 +260,20 @@ export function makeShipRenderable(renderer, getCurrentShip) {
 	};
 
 	return ship;
+}
+
+const getAlienComponents = singleton(() => {
+	const {verts, tcoords} = getShape(sprites.alien, 16, 16, 2, 2);
+
+	return {
+		alienShape: new Shape(verts, Shape.triangles),
+		alienMaterial: new SpriteMaterial(tcoords, sprites.alien, false),
+	};
+});
+export function makeAlienRenderable(renderer) {
+	const {alienShape, alienMaterial} = getAlienComponents();
+	const alien = renderer.getInstance(alienShape, alienMaterial);
+	return alien;
 }
 
 const getAsteroidComponents = singleton(() => {

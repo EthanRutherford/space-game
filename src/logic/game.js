@@ -7,7 +7,12 @@ import {DebugBox} from "Shared/game/objects";
 import {Action} from "Shared/serial";
 import {SpaceBgShader} from "../logic/background-shader";
 import {vLerp, aLerp} from "../logic/util";
-import {makeShipRenderable, makeDebugBoxRenderable, makeAsteroidRenderable} from "./renderables";
+import {
+	makeShipRenderable,
+	makeAlienRenderable,
+	makeAsteroidRenderable,
+	makeDebugBoxRenderable,
+} from "./renderables";
 const {OrthoCamera} = builtIn;
 const {MotionBlur} = shaders;
 const {cleanAngle} = VectorMath;
@@ -60,7 +65,9 @@ export class Game {
 		const gameState = this.getGameState();
 		gameState.solver.query(new AABB(x0, y0, x1, y1), (shape) => {
 			const renderable = this.renderables[shape.body.id];
-			visible.add(renderable);
+			if (renderable != null) {
+				visible.add(renderable);
+			}
 		});
 
 		return [...visible];
@@ -94,6 +101,11 @@ export class Game {
 
 		// update renderable positions and error deltas
 		for (const body of gameState.solver.bodies) {
+			const renderable = this.renderables[body.id];
+			if (renderable == null) {
+				continue;
+			}
+
 			const errors = this.errorMap[body.id];
 			const prevPos = body.originalPrevPos.minus(errors);
 			const prevAngle = body.prevTrans.radians - errors.r;
@@ -107,12 +119,9 @@ export class Game {
 
 			const pos = vLerp(prevPos, currentPos, ratio);
 			const angle = aLerp(prevAngle, currentAngle, ratio);
-			const renderable = this.renderables[body.id];
-			if (renderable) {
-				renderable.x = pos.x;
-				renderable.y = pos.y;
-				renderable.r = angle;
-			}
+			renderable.x = pos.x;
+			renderable.y = pos.y;
+			renderable.r = angle;
 		}
 
 		// update ship
@@ -142,6 +151,18 @@ export class Game {
 		gameState.ship.hp = this.latestSync.ship.hp;
 		Object.assign(gameState.ship.controls, this.latestSync.ship.controls);
 		updates.push(this.latestSync.ship.body);
+
+		for (const [id, alien] of Object.entries(this.latestSync.aliens)) {
+			if (this.idMap[id] == null) {
+				const ali = gameState.addAlien(alien.body, alien.hp);
+				const renderable = makeAlienRenderable(this.renderer);
+				this.addBody(gameState, alien.body.id, ali.body, renderable);
+			} else {
+				// TODO: sync brain
+				gameState.aliens[this.idMap[id]].hp = alien.hp;
+				updates.push(alien.body);
+			}
+		}
 
 		for (const [id, asteroid] of Object.entries(this.latestSync.asteroids)) {
 			if (this.idMap[id] == null) {

@@ -65,8 +65,8 @@ export function castLazers(solver, gunAimData) {
 
 	const result = {};
 	solver.raycast({
-		p1: leftTip,
-		p2: leftEnd,
+		p1: leftTip, p2: leftEnd,
+		shouldCheck: (shape) => !shape.sensor,
 		callback(castData) {
 			result.leftHit = castData.shape.body;
 			result.leftLength = castData.fraction * 50;
@@ -74,8 +74,8 @@ export function castLazers(solver, gunAimData) {
 	});
 
 	solver.raycast({
-		p1: rightTip,
-		p2: rightEnd,
+		p1: rightTip, p2: rightEnd,
+		shouldCheck: (shape) => !shape.sensor,
 		callback(castData) {
 			result.rightHit = castData.shape.body;
 			result.rightLength = castData.fraction * 50;
