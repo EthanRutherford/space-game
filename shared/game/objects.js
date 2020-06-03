@@ -117,10 +117,10 @@ export class Alien {
 			exclusionList: [2],
 			shapes: [
 				new Polygon(true).set([
-					new Vector2D(-1, 0),
-					new Vector2D(1, 0),
-					new Vector2D(1, 100),
-					new Vector2D(-1, 100),
+					new Vector2D(-1.1, 0),
+					new Vector2D(1.1, 0),
+					new Vector2D(1.1, 100),
+					new Vector2D(-1.1, 100),
 				]),
 			],
 		});
